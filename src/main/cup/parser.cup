@@ -11,8 +11,16 @@ terminal PLUS;
 terminal SUB;
 terminal MULT;
 terminal DIV;
+
 terminal OPEN_BRACKET;
 terminal CLOSE_BRACKET;
+
+terminal OPEN_CURLY_BRACKET;
+terminal CLOSE_CURLY_BRACKET;
+
+terminal OPEN_SQUARE_BRACKET;
+terminal CLOSE_SQUARE_BRACKET;
+
 terminal INTEGER_CONSTANT;
 terminal IDENTIFIER;
 
