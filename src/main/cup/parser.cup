@@ -4,13 +4,21 @@ import java_cup.runtime.*;
 
 class Parser;
 
-
 // Terminals
-terminal ASSIG;
+
 terminal PLUS;
 terminal SUB;
 terminal MULT;
 terminal DIV;
+
+terminal EQUAL;
+terminal NOT_EQUAL;
+terminal LESS_EQUAL;
+terminal GREATER_EQUAL;
+terminal LESS;
+terminal GREATER;
+
+terminal ASSIG;
 
 terminal OPEN_BRACKET;
 terminal CLOSE_BRACKET;
@@ -21,7 +29,30 @@ terminal CLOSE_CURLY_BRACKET;
 terminal OPEN_SQUARE_BRACKET;
 terminal CLOSE_SQUARE_BRACKET;
 
+terminal COMMA;
+terminal COLON;
+
+terminal WHILE;
+terminal IF;
+terminal ELSE;
+terminal INIT;
+terminal INT_TYPE;
+terminal FLOAT_TYPE;
+terminal STRING_TYPE;
+
+terminal READ;
+terminal WRITE;
+
+terminal AND;
+terminal OR;
+terminal NOT;
+
+terminal REORDER_FUNCTION;
+terminal NEGATIVE_CALCULATION_FUNCTION;
+
 terminal INTEGER_CONSTANT;
+terminal FLOAT_CONSTANT;
+terminal STRING_CONSTANT;
 terminal IDENTIFIER;
 
 // Non Terminals
