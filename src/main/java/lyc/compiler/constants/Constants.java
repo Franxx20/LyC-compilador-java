@@ -2,7 +2,8 @@ package lyc.compiler.constants;
 
 public final class Constants {
 
-    public static final int MAX_LENGTH = 30;
+    // 50 + 2 por comillas
+    public static final int STRING_MAX_LENGTH = 52;
 
     private Constants(){}
 

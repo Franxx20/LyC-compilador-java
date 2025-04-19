@@ -3,7 +3,8 @@ package lyc.compiler;
 import java_cup.runtime.Symbol;
 import lyc.compiler.ParserSym;
 import lyc.compiler.model.*;
-import static lyc.compiler.constants.Constants.*;
+import lyc.compiler.constants.Constants;
+import javax.management.RuntimeErrorException;import static lyc.compiler.constants.Constants.*;
 
 %%
 
@@ -81,11 +82,10 @@ Letter = [a-zA-Z]
 Digit = [0-9]
 
 Identifier = {Letter} ({Letter}|{Digit})*
-IntegerConstant = {Digit}+
-FloatConstant = {Digit}+"."{Digit}+ | {Digit}+"." | "."{Digit}+
-StringConstant = \"[^*]~\"
-//String = \".*\"
-// REVISAR
+
+IntegerConstant = 0 | [1-9]{Digit}*
+FloatConstant = {Digit}\.{Digit}+ | {Digit}\. | \.{Digit}+
+StringConstant = \"(.*)\"
 
 Comment = "#+"[^*]~"+#"
 
@@ -97,9 +97,37 @@ Comment = "#+"[^*]~"+#"
   /* identifiers */
   {Identifier}                              { return symbol(ParserSym.IDENTIFIER, yytext()); }
   /* Constants */
-  {IntegerConstant}                         { return symbol(ParserSym.INTEGER_CONSTANT, yytext()); }
-  {FloatConstant}                           { return symbol(ParserSym.FLOAT_CONSTANT, yytext()); }
-  {StringConstant}                          { return symbol(ParserSym.STRING_CONSTANT, yytext()); }
+  {IntegerConstant}                         {
+                                              String value = yytext();
+                                              try {
+                                                  Short.valueOf(value);
+                                              } catch (NumberFormatException e){
+                                                  // TODO I DON'T THINK IS A GOOD PRACTICE TO THROW A DIFFRENT TYPE OF ERROR
+                                                  throw new InvalidIntegerException("Invalid integer: " + value) ;
+                                              }
+                                              return symbol(ParserSym.INTEGER_CONSTANT, value);
+                                             }
+  {FloatConstant}                         {
+                                              String value = yytext();
+                                              try {
+                                                  Float f = Float.valueOf(value);
+                                                  if (f.isNaN() || f.isInfinite())
+                                                  {
+                                                      throw new NumberFormatException("Invalid float: " + value);
+                                                  }
+                                              } catch (NumberFormatException e){
+                                                  // TODO I DON'T THINK IS A GOOD PRACTICE TO THROW A DIFFRENT TYPE OF ERROR
+                                                  throw new InvalidFloatException("Invalid float: " + value) ;
+                                              }
+                                              return symbol(ParserSym.FLOAT_CONSTANT, value);
+                                             }
+  {StringConstant}                          {
+                                                  if (yylength() > STRING_MAX_LENGTH){
+                                                      throw new InvalidLengthException("String lenght is beyond maximum lenght for: " + yytext());
+                                                  } else {
+                                                      return symbol(ParserSym.STRING_CONSTANT, yytext());
+                                                  }
+                                                }
 
   /* operators */
   {Plus}                                    { return symbol(ParserSym.PLUS); }
