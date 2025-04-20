@@ -94,20 +94,20 @@ Comment = "#+"[^*]~"+#"
 /* keywords */
 
 <YYINITIAL> {
-  /* identifiers */
-  {Identifier}                              { return symbol(ParserSym.IDENTIFIER, yytext()); }
   /* Constants */
-  {IntegerConstant}                         {
-                                              String value = yytext();
-                                              try {
-                                                  Short.valueOf(value);
-                                              } catch (NumberFormatException e){
-                                                  // TODO I DON'T THINK IS A GOOD PRACTICE TO THROW A DIFFRENT TYPE OF ERROR
-                                                  throw new InvalidIntegerException("Invalid integer: " + value) ;
-                                              }
-                                              return symbol(ParserSym.INTEGER_CONSTANT, value);
-                                             }
-  {FloatConstant}                         {
+    {IntegerConstant}                       {
+                                                String value = yytext();
+                                                try {
+                                                    Short.valueOf(value);
+                                                } catch (NumberFormatException e){
+                                                    // TODO I DON'T THINK IS A GOOD PRACTICE TO THROW A DIFFRENT TYPE OF ERROR
+                                                    throw new InvalidIntegerException("Invalid integer: " + value) ;
+                                                }
+                                                return symbol(ParserSym.INTEGER_CONSTANT, value);
+                                            }
+
+
+  {FloatConstant}                           {
                                               String value = yytext();
                                               try {
                                                   Float f = Float.valueOf(value);
@@ -120,14 +120,15 @@ Comment = "#+"[^*]~"+#"
                                                   throw new InvalidFloatException("Invalid float: " + value) ;
                                               }
                                               return symbol(ParserSym.FLOAT_CONSTANT, value);
-                                             }
+                                            }
+
   {StringConstant}                          {
-                                                  if (yylength() > STRING_MAX_LENGTH){
-                                                      throw new InvalidLengthException("String lenght is beyond maximum lenght for: " + yytext());
-                                                  } else {
-                                                      return symbol(ParserSym.STRING_CONSTANT, yytext());
-                                                  }
+                                                if (yylength() > STRING_MAX_LENGTH){
+                                                    throw new InvalidLengthException("String lenght is beyond maximum lenght for: " + yytext());
+                                                } else {
+                                                    return symbol(ParserSym.STRING_CONSTANT, yytext());
                                                 }
+                                            }
 
   /* operators */
   {Plus}                                    { return symbol(ParserSym.PLUS); }
@@ -173,6 +174,9 @@ Comment = "#+"[^*]~"+#"
 
   {ReorderFunction}                         { return symbol(ParserSym.REORDER_FUNCTION); }
   {NegativeCalculationFunction}             { return symbol(ParserSym.NEGATIVE_CALCULATION_FUNCTION); }
+
+  /* identifiers */
+  {Identifier}                              { return symbol(ParserSym.IDENTIFIER, yytext()); }
 
   /* whitespace */
   {WhiteSpace}                              { /* ignore */ }
