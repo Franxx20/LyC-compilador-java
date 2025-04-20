@@ -79,7 +79,7 @@ non terminal arguments;
 non terminal arguments_list;
 non terminal float_list;
 non terminal float_element;
-non terminal write_read_args;
+non terminal write_args;
 
 // Start Symbol Definition
 start with start_symbol;
@@ -160,11 +160,11 @@ comparator          ::= EQUAL |
                         ;
 
 function            ::= REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET
-                        READ OPEN_BRACKET write_read_args CLOSE_BRACKET |
-                        WRITE OPEN_BRACKET write_read_args CLOSE_BRACKET
+                        READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET |
+                        WRITE OPEN_BRACKET write_args CLOSE_BRACKET
                         ;
 
-write_read_args          ::= IDENTIFIER |
+write_args          ::= IDENTIFIER |
                         constant
                         ;
 
