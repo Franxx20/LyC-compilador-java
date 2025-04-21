@@ -134,7 +134,9 @@ term                ::= term MULT factor {: System.out.println("*"); :} |
                         ;
 
 factor              ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :} |
+                        SUB IDENTIFIER:id {: System.out.println("Id: " + id); :} |
                         constant:constant {: System.out.println("Constant: " + constant ); :} |
+                        SUB constant:constant {: System.out.println("Constant: " + constant); :} |
                         OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :}
                         ;
 
@@ -159,7 +161,7 @@ comparator          ::= EQUAL |
                         GREATER
                         ;
 
-function            ::= REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET
+function            ::= REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET |
                         READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET |
                         WRITE OPEN_BRACKET write_args CLOSE_BRACKET
                         ;
