@@ -84,7 +84,7 @@ Digit = [0-9]
 Identifier = {Letter} ({Letter}|{Digit})*
 
 IntegerConstant = 0 | [1-9]{Digit}*
-FloatConstant = {Digit}\.{Digit}+ | {Digit}\. | \.{Digit}+
+FloatConstant = \.{Digit}+ | {Digit}+\.{Digit}*
 StringConstant = \"(.*)\"
 
 Comment = "#+"[^*]~"+#"
