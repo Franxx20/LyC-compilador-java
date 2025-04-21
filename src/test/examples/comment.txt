@@ -1,0 +1,4 @@
+#+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
+var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
+foo = var
+#+ Esto es un comentario +#
