@@ -6,6 +6,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -15,12 +16,17 @@ import static com.google.common.truth.Truth.assertThat;
 import static lyc.compiler.Constants.EXAMPLES_ROOT_DIRECTORY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Disabled
+//@Disabled
 public class ParserTest {
 
     @Test
     public void assignmentWithExpression() throws Exception {
         compilationSuccessful("c=d*(e-21)/4");
+    }
+
+    @Test
+    public void assignmentWithExpressionFromFile() throws Exception {
+        compilationSuccessful(readFromFile("test.txt"));
     }
 
     @Test
@@ -92,9 +98,11 @@ public class ParserTest {
     }
 
     private String readFromFile(String fileName) throws IOException {
-        URL url = new URL(EXAMPLES_ROOT_DIRECTORY + "/%s".formatted(fileName));
-        assertThat(url).isNotNull();
-        return IOUtils.toString(url.openStream(), StandardCharsets.UTF_8);
+//        URL url = new URL(EXAMPLES_ROOT_DIRECTORY + "/%s".formatted(fileName));
+//        assertThat(url).isNotNull();
+//        return IOUtils.toString(url.openStream(), StandardCharsets.UTF_8);
+        InputStream inputStream = new FileInputStream(EXAMPLES_ROOT_DIRECTORY + "%s".formatted(fileName));
+        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
     }
 
 

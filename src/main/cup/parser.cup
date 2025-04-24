@@ -36,9 +36,9 @@ terminal WHILE;
 terminal IF;
 terminal ELSE;
 terminal INIT;
-terminal INT_TYPE;
-terminal FLOAT_TYPE;
-terminal STRING_TYPE;
+terminal TYPE_INT;
+terminal TYPE_FLOAT;
+terminal TYPE_STRING;
 
 terminal READ;
 terminal WRITE;
@@ -56,23 +56,133 @@ terminal STRING_CONSTANT;
 terminal IDENTIFIER;
 
 // Non Terminals
+non terminal start_symbol;
+non terminal program;
+non terminal var_declaration;
+non terminal iteration;
+non terminal selection;
 non terminal sentence;
 non terminal assignment;
 non terminal expression;
 non terminal term;
 non terminal factor;
+non terminal condition;
+non terminal comparation;
+non terminal comparator;
+non terminal list_declaration;
+non terminal var_list;
+non terminal var_type;
+non terminal function;
+non terminal negative_function;
+non terminal constant;
+non terminal arguments;
+non terminal arguments_list;
+non terminal float_list;
+non terminal float_element;
+non terminal write_args;
 
 // Start Symbol Definition
-start with sentence;
+start with start_symbol;
 
-sentence ::= assignment {: System.out.println("End"); :};
-assignment ::= IDENTIFIER ASSIG expression {: System.out.println("Assignment"); :};
-expression ::= expression PLUS term {: System.out.println("+"); :};
-expression ::= expression SUB term {: System.out.println("-"); :};
-expression ::= term {: System.out.println("Expression = Term"); :};
-term ::= term MULT factor {: System.out.println("*"); :};
-term ::= term DIV factor {: System.out.println("/"); :};
-term ::= factor {: System.out.println("Term = factor"); :};
-factor ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :};
-factor ::= INTEGER_CONSTANT:constant {: System.out.println("Constant: " + constant ); :};
-factor ::= OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :};
+// Rules
+start_symbol ::= program;
+
+program             ::= program sentence |
+                        sentence
+                        ;
+
+sentence            ::= assignment {: System.out.println("End"); :} |
+                        var_declaration |
+                        iteration |
+                        selection |
+                        function
+                        ;
+
+assignment          ::= IDENTIFIER ASSIG expression {: System.out.println("Assignment"); :} |
+                        IDENTIFIER ASSIG negative_function
+                        ;
+
+selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET |
+                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        ;
+
+iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET;
+
+var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET;
+
+list_declaration    ::= list_declaration var_list COLON var_type |
+                        var_list COLON var_type
+                        ;
+
+var_list            ::= var_list COMMA IDENTIFIER |
+                        IDENTIFIER
+                        ;
+
+var_type            ::= TYPE_INT |
+                        TYPE_FLOAT |
+                        TYPE_STRING
+                        ;
+
+expression          ::= expression PLUS term {: System.out.println("+"); :} |
+                        expression SUB term {: System.out.println("-"); :} |
+                        term {: System.out.println("Expression = Term"); :}
+                        ;
+
+term                ::= term MULT factor {: System.out.println("*"); :} |
+                        term DIV factor {: System.out.println("/"); :} |
+                        factor {: System.out.println("Term = factor"); :}
+                        ;
+
+factor              ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :} |
+                        SUB IDENTIFIER:id {: System.out.println("Id: " + id); :} |
+                        constant:constant {: System.out.println("Constant: " + constant ); :} |
+                        SUB constant:constant {: System.out.println("Constant: " + constant); :} |
+                        OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :}
+                        ;
+
+constant            ::= INTEGER_CONSTANT |
+                        FLOAT_CONSTANT |
+                        STRING_CONSTANT
+                        ;
+
+condition           ::= comparation |
+                        condition AND comparation |
+                        condition OR comparation |
+                        NOT comparation
+                        ;
+
+comparation         ::= expression comparator expression;
+
+comparator          ::= EQUAL |
+                        NOT_EQUAL |
+                        LESS_EQUAL |
+                        GREATER_EQUAL |
+                        LESS |
+                        GREATER
+                        ;
+
+function            ::= REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET |
+                        READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET |
+                        WRITE OPEN_BRACKET write_args CLOSE_BRACKET
+                        ;
+
+write_args          ::= IDENTIFIER |
+                        constant
+                        ;
+
+arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT
+                        ;
+
+arguments_list      ::= arguments_list COMMA expression |
+                        expression
+                        ;
+
+negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET
+                        ;
+
+float_list          ::= float_list COMMA float_element
+                        ;
+
+float_element       ::= IDENTIFIER |
+                        FLOAT_CONSTANT
+                        ;

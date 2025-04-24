@@ -1,24 +1,19 @@
 package lyc.compiler;
 
 import lyc.compiler.factories.LexerFactory;
-import lyc.compiler.model.CompilerException;
-import lyc.compiler.model.InvalidIntegerException;
-import lyc.compiler.model.InvalidLengthException;
-import lyc.compiler.model.UnknownCharacterException;
+import lyc.compiler.model.*;
 import org.apache.commons.text.CharacterPredicates;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static com.google.common.truth.Truth.assertThat;
-import static lyc.compiler.constants.Constants.MAX_LENGTH;
+import static lyc.compiler.constants.Constants.STRING_MAX_LENGTH;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
-//@Disabled
 public class LexerTest {
 
   private Lexer lexer;
@@ -30,7 +25,6 @@ public class LexerTest {
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
-  @Disabled
   @Test
   public void invalidStringConstantLength() {
     assertThrows(InvalidLengthException.class, () -> {
@@ -39,16 +33,16 @@ public class LexerTest {
     });
   }
 
-  @Disabled
-  @Test
-  public void invalidIdLength() {
-    assertThrows(InvalidLengthException.class, () -> {
-      scan(getRandomString());
-      nextToken();
-    });
-  }
+// ID NO REQUIERE NINGUN LIMITE DE TAMAÑO
+//  @Disabled
+//  @Test
+//  public void invalidIdLength() {
+//    assertThrows(InvalidLengthException.class, () -> {
+//      scan(getRandomString());
+//      nextToken();
+//    });
+//  }
 
-  @Disabled
   @Test
   public void invalidPositiveIntegerConstantValue() {
     assertThrows(InvalidIntegerException.class, () -> {
@@ -57,17 +51,32 @@ public class LexerTest {
     });
   }
 
-  @Disabled
   @Test
   public void invalidNegativeIntegerConstantValue() {
     assertThrows(InvalidIntegerException.class, () -> {
       scan("%d".formatted(-9223372036854775807L));
+      nextToken(); // Sub
+      nextToken(); // Integer
+    });
+  }
+
+  @Test
+  public void invalidPositiveFloatConstantValue() {
+    assertThrows(InvalidFloatException.class, () -> {
+      scan("%f".formatted(109823470198234098123409812730948102983740981272374981239847.019823409182374098123409821304981203984712098347));
       nextToken();
     });
   }
 
+  @Test
+  public void invalidNegativeFloatConstantValue() {
+    assertThrows(InvalidFloatException.class, () -> {
+      scan("%f".formatted(-109823470198234098123409812730948102983740981272374981239847.019823409182374098123409821304981203984712098347));
+      nextToken();
+      nextToken();
+    });
+  }
 
-  @Disabled
   @Test
   public void assignmentWithExpressions() throws Exception {
     scan("c=d*(e-21)/4");
@@ -85,7 +94,6 @@ public class LexerTest {
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
-  @Disabled
   @Test
   public void unknownCharacter() {
     assertThrows(UnknownCharacterException.class, () -> {
@@ -94,7 +102,6 @@ public class LexerTest {
     });
   }
 
-  @Disabled
   @AfterEach
   public void resetLexer() {
     lexer = null;
@@ -112,7 +119,7 @@ public class LexerTest {
     return new RandomStringGenerator.Builder()
             .filteredBy(CharacterPredicates.LETTERS)
             .withinRange('a', 'z')
-            .build().generate(MAX_LENGTH * 2);
+            .build().generate(STRING_MAX_LENGTH * 2);
   }
 
 }
