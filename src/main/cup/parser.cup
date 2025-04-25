@@ -67,6 +67,8 @@ non terminal expression;
 non terminal term;
 non terminal factor;
 non terminal condition;
+non terminal logic_term;
+non terminal logic_factor;
 non terminal comparation;
 non terminal comparator;
 non terminal list_declaration;
@@ -140,15 +142,22 @@ factor              ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :} |
                         OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :}
                         ;
 
-constant            ::= INTEGER_CONSTANT |
-                        FLOAT_CONSTANT |
-                        STRING_CONSTANT
+constant            ::= INTEGER_CONSTANT:i {: RESULT = i; :} |
+                        FLOAT_CONSTANT:f {: RESULT = f; :} |
+                        STRING_CONSTANT:s {: RESULT = s; :}
                         ;
 
-condition           ::= comparation |
-                        condition AND comparation |
-                        condition OR comparation |
-                        NOT comparation
+condition           ::= condition OR logic_term |
+                        logic_term
+                        ;
+
+logic_term          ::= logic_term AND logic_factor |
+                        logic_factor
+                        ;
+
+logic_factor        ::= NOT logic_factor |
+                        comparation |
+                        OPEN_BRACKET condition CLOSE_BRACKET
                         ;
 
 comparation         ::= expression comparator expression;
