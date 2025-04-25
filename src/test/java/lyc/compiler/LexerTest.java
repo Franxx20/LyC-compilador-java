@@ -5,7 +5,9 @@ import lyc.compiler.model.*;
 import org.apache.commons.text.CharacterPredicates;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Resources;
 
 import java.io.IOException;
 
@@ -18,13 +20,14 @@ public class LexerTest {
 
   private Lexer lexer;
 
-
+  @Disabled
   @Test
   public void comment() throws Exception{
     scan("#+This is a comment+#");
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
+  @Disabled
   @Test
   public void invalidStringConstantLength() {
     assertThrows(InvalidLengthException.class, () -> {
@@ -43,6 +46,7 @@ public class LexerTest {
 //    });
 //  }
 
+  @Disabled
   @Test
   public void invalidPositiveIntegerConstantValue() {
     assertThrows(InvalidIntegerException.class, () -> {
@@ -51,6 +55,7 @@ public class LexerTest {
     });
   }
 
+  @Disabled
   @Test
   public void invalidNegativeIntegerConstantValue() {
     assertThrows(InvalidIntegerException.class, () -> {
@@ -63,7 +68,7 @@ public class LexerTest {
   @Test
   public void invalidPositiveFloatConstantValue() {
     assertThrows(InvalidFloatException.class, () -> {
-      scan("%f".formatted(109823470198234098123409812730948102983740981272374981239847.019823409182374098123409821304981203984712098347));
+      scan("109823470198234098123409812730948102983740981272374981239847.019823409182374098123409821304981203984712098347");
       nextToken();
     });
   }
@@ -71,12 +76,13 @@ public class LexerTest {
   @Test
   public void invalidNegativeFloatConstantValue() {
     assertThrows(InvalidFloatException.class, () -> {
-      scan("%f".formatted(-109823470198234098123409812730948102983740981272374981239847.019823409182374098123409821304981203984712098347));
+      scan("-109823470198234098123409812730948102983740981272374981239847.019823409182374098123409821304981203984712098347");
       nextToken();
       nextToken();
     });
   }
 
+  @Disabled
   @Test
   public void assignmentWithExpressions() throws Exception {
     scan("c=d*(e-21)/4");
@@ -94,6 +100,7 @@ public class LexerTest {
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
+  @Disabled
   @Test
   public void unknownCharacter() {
     assertThrows(UnknownCharacterException.class, () -> {

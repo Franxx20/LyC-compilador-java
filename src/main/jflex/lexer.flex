@@ -84,7 +84,7 @@ Digit = [0-9]
 Identifier = {Letter} ({Letter}|{Digit})*
 
 IntegerConstant = 0 | [1-9]{Digit}*
-FloatConstant = \.{Digit}+ | {Digit}+\.{Digit}*
+FloatConstant = {Digit}+\.{Digit}* | \.{Digit}+
 StringConstant = \"(.*)\"
 
 Comment = "#+"[^*]~"+#"
@@ -148,12 +148,10 @@ Comment = "#+"[^*]~"+#"
                                                 try {
                                                     Short.valueOf(value);
                                                 } catch (NumberFormatException e){
-                                                    // TODO I DON'T THINK IS A GOOD PRACTICE TO THROW A DIFFRENT TYPE OF ERROR
-                                                    throw new InvalidIntegerException("Invalid integer: " + value) ;
+                                                    throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
                                                 return symbol(ParserSym.INTEGER_CONSTANT, value);
                                             }
-
 
   {FloatConstant}                           {
                                                 String value = yytext();
@@ -163,8 +161,7 @@ Comment = "#+"[^*]~"+#"
                                                       throw new NumberFormatException("Invalid float: " + value);
                                                   }
                                                 } catch (NumberFormatException e){
-                                                  // TODO I DON'T THINK IS A GOOD PRACTICE TO THROW A DIFFRENT TYPE OF ERROR
-                                                  throw new InvalidFloatException("Invalid float: " + value) ;
+                                                  throw new InvalidFloatException("Invalid float: " + value);
                                                 }
                                                 return symbol(ParserSym.FLOAT_CONSTANT, value);
                                             }
