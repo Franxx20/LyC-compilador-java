@@ -3,7 +3,6 @@ package lyc.compiler;
 import java_cup.runtime.Symbol;
 import lyc.compiler.factories.ParserFactory;
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;
