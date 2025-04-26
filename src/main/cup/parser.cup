@@ -76,6 +76,7 @@ non terminal var_list;
 non terminal var_type;
 non terminal function;
 non terminal negative_function;
+non terminal reorder_function;
 non terminal constant;
 non terminal arguments;
 non terminal arguments_list;
@@ -171,7 +172,8 @@ comparator          ::= EQUAL |
                         GREATER
                         ;
 
-function            ::= REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder ( arguments )"); :} |
+function            ::= reorder_function  {: System.out.println("reorder ( arguments )"); :} |
+                        negative_function {: System.out.println("negativeCalculation ( arguments )"); :} |
                         READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("read ( IDENTIFIER )"); :} |
                         WRITE OPEN_BRACKET write_args CLOSE_BRACKET {: System.out.println("write ( write_args )"); :}
                         ;
@@ -190,9 +192,15 @@ arguments_list      ::= arguments_list COMMA expression |
 negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET
                         ;
 
-float_list          ::= float_list COMMA float_element
+reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET
+                        ;
+
+float_list          ::= float_element |
+                        float_list COMMA float_element
                         ;
 
 float_element       ::= IDENTIFIER |
-                        FLOAT_CONSTANT
+                        FLOAT_CONSTANT |
+                        SUB IDENTIFIER |
+                        SUB FLOAT_CONSTANT
                         ;

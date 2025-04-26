@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -22,6 +21,16 @@ public class ParserTest {
     @Test
     public void testAll() throws Exception {
         compilationSuccessful(readFromFile("test.txt"));
+    }
+
+    @Test
+    public void reorderTest() throws Exception {
+        compilationSuccessful(readFromFile("reorder.txt"));
+    }
+
+    @Test
+    public void negativeCalculationTest() throws Exception {
+        compilationSuccessful(readFromFile("negativeCalculation.txt"));
     }
 
     @Test

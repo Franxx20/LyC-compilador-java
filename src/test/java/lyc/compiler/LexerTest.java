@@ -5,9 +5,7 @@ import lyc.compiler.model.*;
 import org.apache.commons.text.CharacterPredicates;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Resources;
 
 import java.io.IOException;
 
