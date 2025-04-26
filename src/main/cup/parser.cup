@@ -103,29 +103,29 @@ sentence            ::= assignment {: System.out.println("sentence = assignment"
                         function {: System.out.println("sentence = function"); :}
                         ;
 
-assignment          ::= IDENTIFIER ASSIG expression {: System.out.println("assignment: id = expression"); :} |
-                        IDENTIFIER ASSIG negative_function {: System.out.println("assignment: id = negative_function"); :}
+assignment          ::= IDENTIFIER ASSIG expression {: System.out.println("assignment = id=expression"); :} |
+                        IDENTIFIER ASSIG negative_function {: System.out.println("assignment = id=negative_function"); :}
                         ;
 
-selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("if (condition) { program }"); :} |
-                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("if (condition) { program } else { program }"); :}
+selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("selection = if (condition) { program }"); :} |
+                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("selection = if (condition) { program } else { program }"); :}
                         ;
 
 iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("while (condition) { program }"); :};
 
 var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET {: System.out.println("init { list_declaration }"); :};
 
-list_declaration    ::= list_declaration var_list COLON var_type {: System.out.println("list_declaration var_list : var_type"); :} |
-                        var_list COLON var_type {: System.out.println("var_list : var_type"); :}
+list_declaration    ::= list_declaration var_list COLON var_type {: System.out.println("list_declaration = list_declaration var_list : var_type"); :} |
+                        var_list COLON var_type {: System.out.println("list_declaration = var_list : var_type"); :}
                         ;
 
-var_list            ::= var_list COMMA IDENTIFIER |
-                        IDENTIFIER
+var_list            ::= var_list COMMA IDENTIFIER {: System.out.println("var_list = var_list , IDENTIFIER"); :} |
+                        IDENTIFIER {: System.out.println("var_list = IDENTIFIER"); :}
                         ;
 
-var_type            ::= TYPE_INT |
-                        TYPE_FLOAT |
-                        TYPE_STRING
+var_type            ::= TYPE_INT {: System.out.println("int"); :} |
+                        TYPE_FLOAT {: System.out.println("float"); :} |
+                        TYPE_STRING {: System.out.println("string"); :}
                         ;
 
 expression          ::= expression PLUS term {: System.out.println("+"); :} |
@@ -170,43 +170,43 @@ logic_factor        ::= NOT logic_factor {: System.out.println("logic_factor = N
 
 comparation         ::= expression comparator expression {: System.out.println("comparation = expression comparator expression"); :};
 
-comparator          ::= EQUAL |
-                        NOT_EQUAL |
-                        LESS_EQUAL |
-                        GREATER_EQUAL |
-                        LESS |
-                        GREATER
+comparator          ::= EQUAL {: System.out.println("=="); :}|
+                        NOT_EQUAL {: System.out.println("!="); :} |
+                        LESS_EQUAL {: System.out.println("<="); :} |
+                        GREATER_EQUAL {: System.out.println(">="); :} |
+                        LESS {: System.out.println("<"); :} |
+                        GREATER {: System.out.println(">"); :}
                         ;
 
-function            ::= reorder_function  {: System.out.println("reorder ( arguments )"); :} |
-                        negative_function {: System.out.println("negativeCalculation ( arguments )"); :} |
-                        READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("read ( IDENTIFIER )"); :} |
-                        WRITE OPEN_BRACKET write_args CLOSE_BRACKET {: System.out.println("write ( write_args )"); :}
+function            ::= reorder_function  {: System.out.println("function = reorder_function"); :} |
+                        negative_function {: System.out.println("function = negative_function"); :} |
+                        READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("function = read ( IDENTIFIER )"); :} |
+                        WRITE OPEN_BRACKET write_args CLOSE_BRACKET {: System.out.println("function = write ( write_args )"); :}
                         ;
 
-write_args          ::= IDENTIFIER |
-                        constant
+write_args          ::= IDENTIFIER {: System.out.println("write_args = IDENTIFIER"); :} |
+                        constant {: System.out.println("write_args = constant"); :}
                         ;
 
-arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT
+arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT {: System.out.println("arguments = [arguments_list], integer_constant, integer_constant"); :}
                         ;
 
-arguments_list      ::= arguments_list COMMA expression |
-                        expression
+arguments_list      ::= arguments_list COMMA expression {: System.out.println("arguments_list = arguments_list , expression"); :} |
+                        expression {: System.out.println("arguments_list = expression"); :}
                         ;
 
-negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET
+negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET {: System.out.println("negative_function = negativeCalculation ( float_list )"); :}
                         ;
 
-reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET
+reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder_function = reorder ( arguments )"); :}
                         ;
 
-float_list          ::= float_element |
-                        float_list COMMA float_element
+float_list          ::= float_element:f {: System.out.println("float_list =" + f); :} |
+                        float_list COMMA float_element {: System.out.println("float_list , float_element"); :}
                         ;
 
-float_element       ::= IDENTIFIER |
-                        FLOAT_CONSTANT |
-                        SUB IDENTIFIER |
-                        SUB FLOAT_CONSTANT
+float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
+                        FLOAT_CONSTANT:f {: RESULT = f; :} |
+                        SUB IDENTIFIER:id  {: RESULT = id; :} |
+                        SUB FLOAT_CONSTANT:f {: RESULT = f; :}
                         ;
