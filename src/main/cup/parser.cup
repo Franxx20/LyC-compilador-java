@@ -87,33 +87,34 @@ non terminal write_args;
 start with start_symbol;
 
 // Rules
-start_symbol ::= program;
-
-program             ::= program sentence |
-                        sentence
+start_symbol        ::= program {: System.out.println("End"); :}
                         ;
 
-sentence            ::= assignment {: System.out.println("End"); :} |
-                        var_declaration |
-                        iteration |
-                        selection |
-                        function
+program             ::= program sentence {: System.out.println("program = program sentence"); :} |
+                        sentence {: System.out.println("program = sentence"); :}
                         ;
 
-assignment          ::= IDENTIFIER ASSIG expression {: System.out.println("Assignment"); :} |
-                        IDENTIFIER ASSIG negative_function
+sentence            ::= assignment {: System.out.println("sentence = assignment"); :} |
+                        var_declaration {: System.out.println("sentence = var_declaration"); :} |
+                        iteration {: System.out.println("sentence = iteration"); :} |
+                        selection {: System.out.println("sentence = selection"); :} |
+                        function {: System.out.println("sentence = function"); :}
                         ;
 
-selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET |
-                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+assignment          ::= IDENTIFIER ASSIG expression {: System.out.println("assignment: id = expression"); :} |
+                        IDENTIFIER ASSIG negative_function {: System.out.println("assignment: id = negative_function"); :}
                         ;
 
-iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET;
+selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("if (condition) { program }"); :} |
+                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("if (condition) { program } else { program }"); :}
+                        ;
 
-var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET;
+iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("while (condition) { program }"); :};
 
-list_declaration    ::= list_declaration var_list COLON var_type |
-                        var_list COLON var_type
+var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET {: System.out.println("init { list_declaration }"); :};
+
+list_declaration    ::= list_declaration var_list COLON var_type {: System.out.println("list_declaration var_list : var_type"); :} |
+                        var_list COLON var_type {: System.out.println("var_list : var_type"); :}
                         ;
 
 var_list            ::= var_list COMMA IDENTIFIER |
@@ -147,20 +148,20 @@ constant            ::= INTEGER_CONSTANT:i {: RESULT = i; :} |
                         STRING_CONSTANT:s {: RESULT = s; :}
                         ;
 
-condition           ::= condition OR logic_term |
-                        logic_term
+condition           ::= condition OR logic_term {: System.out.println("condition = condition OR logic_term"); :} |
+                        logic_term {: System.out.println("condition = logic_term"); :}
                         ;
 
-logic_term          ::= logic_term AND logic_factor |
-                        logic_factor
+logic_term          ::= logic_term AND logic_factor {: System.out.println("logic_term = logic_term AND logic_factor"); :} |
+                        logic_factor {: System.out.println("logic_term = logic_factor"); :}
                         ;
 
-logic_factor        ::= NOT logic_factor |
-                        comparation |
-                        OPEN_BRACKET condition CLOSE_BRACKET
+logic_factor        ::= NOT logic_factor {: System.out.println("logic_factor = NOT logic_factor"); :} |
+                        comparation {: System.out.println("logic_factor = comparation"); :} |
+                        OPEN_BRACKET condition CLOSE_BRACKET {: System.out.println("logic_factor = ( expression )"); :}
                         ;
 
-comparation         ::= expression comparator expression;
+comparation         ::= expression comparator expression {: System.out.println("comparation = expression comparator expression"); :};
 
 comparator          ::= EQUAL |
                         NOT_EQUAL |
@@ -170,9 +171,9 @@ comparator          ::= EQUAL |
                         GREATER
                         ;
 
-function            ::= REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET |
-                        READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET |
-                        WRITE OPEN_BRACKET write_args CLOSE_BRACKET
+function            ::= REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder ( arguments )"); :} |
+                        READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("read ( IDENTIFIER )"); :} |
+                        WRITE OPEN_BRACKET write_args CLOSE_BRACKET {: System.out.println("write ( write_args )"); :}
                         ;
 
 write_args          ::= IDENTIFIER |
