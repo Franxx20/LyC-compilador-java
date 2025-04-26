@@ -5,9 +5,7 @@ import lyc.compiler.model.*;
 import org.apache.commons.text.CharacterPredicates;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Resources;
 
 import java.io.IOException;
 
@@ -20,14 +18,12 @@ public class LexerTest {
 
   private Lexer lexer;
 
-  @Disabled
   @Test
   public void comment() throws Exception{
     scan("#+This is a comment+#");
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
-  @Disabled
   @Test
   public void invalidStringConstantLength() {
     assertThrows(InvalidLengthException.class, () -> {
@@ -46,7 +42,6 @@ public class LexerTest {
 //    });
 //  }
 
-  @Disabled
   @Test
   public void invalidPositiveIntegerConstantValue() {
     assertThrows(InvalidIntegerException.class, () -> {
@@ -55,7 +50,6 @@ public class LexerTest {
     });
   }
 
-  @Disabled
   @Test
   public void invalidNegativeIntegerConstantValue() {
     assertThrows(InvalidIntegerException.class, () -> {
@@ -82,7 +76,6 @@ public class LexerTest {
     });
   }
 
-  @Disabled
   @Test
   public void assignmentWithExpressions() throws Exception {
     scan("c=d*(e-21)/4");
@@ -100,7 +93,6 @@ public class LexerTest {
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
-  @Disabled
   @Test
   public void unknownCharacter() {
     assertThrows(UnknownCharacterException.class, () -> {

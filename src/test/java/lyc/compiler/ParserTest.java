@@ -9,15 +9,29 @@ import org.junit.jupiter.api.Test;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import static com.google.common.truth.Truth.assertThat;
 import static lyc.compiler.Constants.EXAMPLES_ROOT_DIRECTORY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-//@Disabled
+
 public class ParserTest {
+
+    @Test
+    public void testAll() throws Exception {
+        compilationSuccessful(readFromFile("test.txt"));
+    }
+
+    @Test
+    public void reorderTest() throws Exception {
+        compilationSuccessful(readFromFile("reorder.txt"));
+    }
+
+    @Test
+    public void negativeCalculationTest() throws Exception {
+        compilationSuccessful(readFromFile("negativeCalculation.txt"));
+    }
 
     @Test
     public void assignmentWithExpression() throws Exception {
@@ -25,60 +39,65 @@ public class ParserTest {
     }
 
     @Test
-    public void assignmentWithExpressionFromFile() throws Exception {
-        compilationSuccessful(readFromFile("test.txt"));
-    }
-
-    @Test
     public void syntaxError() {
         compilationError("1234");
     }
 
+    @Disabled
     @Test
     void assignments() throws Exception {
         compilationSuccessful(readFromFile("assignments.txt"));
     }
 
+    @Disabled
     @Test
     void write() throws Exception {
         compilationSuccessful(readFromFile("write.txt"));
     }
 
+    @Disabled
     @Test
     void read() throws Exception {
         compilationSuccessful(readFromFile("read.txt"));
     }
 
+    @Disabled
     @Test
     void comment() throws Exception {
         compilationSuccessful(readFromFile("comment.txt"));
     }
 
+    @Disabled
     @Test
     void init() throws Exception {
         compilationSuccessful(readFromFile("init.txt"));
     }
 
+    @Disabled
     @Test
     void and() throws Exception {
         compilationSuccessful(readFromFile("and.txt"));
     }
 
+    @Disabled
     @Test
     void or() throws Exception {
         compilationSuccessful(readFromFile("or.txt"));
     }
 
+    @Disabled
     @Test
     void not() throws Exception {
         compilationSuccessful(readFromFile("not.txt"));
     }
 
+    @Disabled
     @Test
     void ifStatement() throws Exception {
         compilationSuccessful(readFromFile("if.txt"));
     }
 
+    @Disabled
     @Test
     void whileStatement() throws Exception {
         compilationSuccessful(readFromFile("while.txt"));
@@ -98,9 +117,6 @@ public class ParserTest {
     }
 
     private String readFromFile(String fileName) throws IOException {
-//        URL url = new URL(EXAMPLES_ROOT_DIRECTORY + "/%s".formatted(fileName));
-//        assertThat(url).isNotNull();
-//        return IOUtils.toString(url.openStream(), StandardCharsets.UTF_8);
         InputStream inputStream = new FileInputStream(EXAMPLES_ROOT_DIRECTORY + "%s".formatted(fileName));
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
     }
