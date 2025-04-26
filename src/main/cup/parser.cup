@@ -1,6 +1,7 @@
 package lyc.compiler;
 
 import java_cup.runtime.*;
+import lyc.compiler.files.SymbolTableGenerator;
 
 class Parser;
 
@@ -135,10 +136,15 @@ term                ::= term MULT factor {: System.out.println("*"); :} |
                         factor {: System.out.println("Term = factor"); :}
                         ;
 
-factor              ::= IDENTIFIER:id  {: System.out.println("Id: " + id); :} |
+factor              ::= IDENTIFIER:id
+                        {:
+                            System.out.println("Id: " + id);
+                            SymbolTableGenerator.insertVariable(id.toString(), "id");
+                        :}
+                        |
                         SUB IDENTIFIER:id {: System.out.println("Id: " + id); :} |
-                        constant:constant {: System.out.println("Constant: " + constant ); :} |
-                        SUB constant:constant {: System.out.println("Constant: " + constant); :} |
+                        constant:cte {: System.out.println("Constant: " + cte); :} |
+                        SUB constant:cte {: System.out.println("Constant: " + "-"+ cte); :} |
                         OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :}
                         ;
 

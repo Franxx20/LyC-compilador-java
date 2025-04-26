@@ -2,7 +2,7 @@ package lyc.compiler;
 
 import java_cup.runtime.Symbol;
 import lyc.compiler.ParserSym;
-import lyc.compiler.model.*;
+import lyc.compiler.files.SymbolTableGenerator;import lyc.compiler.model.*;
 import lyc.compiler.constants.Constants;
 import javax.management.RuntimeErrorException;import static lyc.compiler.constants.Constants.*;
 
@@ -21,11 +21,22 @@ import javax.management.RuntimeErrorException;import static lyc.compiler.constan
 
 %{
   private Symbol symbol(int type) {
-    return new Symbol(type, yyline, yycolumn);
-  }
-  private Symbol symbol(int type, Object value) {
-    return new Symbol(type, yyline, yycolumn, value);
-  }
+      return new Symbol(type, yyline, yycolumn);
+    }
+    private Symbol symbol(int type, Object value) {
+//        switch(type){
+//            case ParserSym.INTEGER_CONSTANT:
+//                SymbolTableGenerator.insertConstant(value.toString(), "integer");
+//                break;
+//            case ParserSym.FLOAT_CONSTANT:
+//                SymbolTableGenerator.insertConstant(value.toString(), "float");
+//                break;
+//            case ParserSym.STRING_CONSTANT:
+//                SymbolTableGenerator.insertConstant(value.toString(), "string");
+//                break;
+//        }
+      return new Symbol(type, yyline, yycolumn, value);
+    }
 %}
 
 LineTerminator = \r|\n|\r\n
@@ -150,6 +161,9 @@ Comment = "#+"[^*]~"+#"
                                                 } catch (NumberFormatException e){
                                                     throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
+
+
+                                                SymbolTableGenerator.insertConstant("_" + yytext(), "integer");
                                                 return symbol(ParserSym.INTEGER_CONSTANT, value);
                                             }
 
@@ -163,6 +177,7 @@ Comment = "#+"[^*]~"+#"
                                                 } catch (NumberFormatException e){
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
+                                                SymbolTableGenerator.insertConstant("_" + yytext(), "float");
                                                 return symbol(ParserSym.FLOAT_CONSTANT, value);
                                             }
 
@@ -170,6 +185,7 @@ Comment = "#+"[^*]~"+#"
                                                 if (yylength() > STRING_MAX_LENGTH){
                                                     throw new InvalidLengthException("String lenght is beyond maximum lenght for: " + yytext());
                                                 } else {
+                                                    SymbolTableGenerator.insertConstant("_" + yytext(), "string");
                                                     return symbol(ParserSym.STRING_CONSTANT, yytext());
                                                 }
                                             }

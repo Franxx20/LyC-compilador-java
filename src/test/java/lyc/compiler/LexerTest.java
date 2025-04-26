@@ -5,9 +5,7 @@ import lyc.compiler.model.*;
 import org.apache.commons.text.CharacterPredicates;
 import org.apache.commons.text.RandomStringGenerator;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Resources;
 
 import java.io.IOException;
 
@@ -20,11 +18,13 @@ public class LexerTest {
 
   private Lexer lexer;
 
+
   @Test
   public void comment() throws Exception{
     scan("#+This is a comment+#");
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
+
 
   @Test
   public void invalidStringConstantLength() {
@@ -35,7 +35,7 @@ public class LexerTest {
   }
 
 // ID NO REQUIERE NINGUN LIMITE DE TAMAÑO
-//  @Disabled
+//
 //  @Test
 //  public void invalidIdLength() {
 //    assertThrows(InvalidLengthException.class, () -> {
@@ -44,6 +44,7 @@ public class LexerTest {
 //    });
 //  }
 
+
   @Test
   public void invalidPositiveIntegerConstantValue() {
     assertThrows(InvalidIntegerException.class, () -> {
@@ -51,6 +52,7 @@ public class LexerTest {
       nextToken();
     });
   }
+
 
   @Test
   public void invalidNegativeIntegerConstantValue() {
@@ -78,6 +80,7 @@ public class LexerTest {
     });
   }
 
+
   @Test
   public void assignmentWithExpressions() throws Exception {
     scan("c=d*(e-21)/4");
@@ -94,6 +97,7 @@ public class LexerTest {
     assertThat(nextToken()).isEqualTo(ParserSym.INTEGER_CONSTANT);
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
+
 
   @Test
   public void unknownCharacter() {
