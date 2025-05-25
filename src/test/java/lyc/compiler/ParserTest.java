@@ -18,13 +18,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ParserTest {
 
     @Test
-    public void assignmentWithExpression() throws Exception {
-        compilationSuccessful("c=d*(e-21)/4");
+    public void testAll() throws Exception {
+        compilationSuccessful(readFromFile("test.txt"));
     }
 
     @Test
-    public void assignmentWithExpressionFromFile() throws Exception {
-        compilationSuccessful(readFromFile("test.txt"));
+    public void reorderTest() throws Exception {
+        compilationSuccessful(readFromFile("reorder.txt"));
+    }
+
+    @Test
+    public void negativeCalculationTest() throws Exception {
+        compilationSuccessful(readFromFile("negativeCalculation.txt"));
+    }
+
+    @Test
+    public void assignmentWithExpression() throws Exception {
+        compilationSuccessful("c=d*(e-21)/4");
     }
 
     @Test
@@ -96,9 +106,6 @@ public class ParserTest {
     }
 
     private String readFromFile(String fileName) throws IOException {
-//        URL url = new URL(EXAMPLES_ROOT_DIRECTORY + "/%s".formatted(fileName));
-//        assertThat(url).isNotNull();
-//        return IOUtils.toString(url.openStream(), StandardCharsets.UTF_8);
         InputStream inputStream = new FileInputStream(EXAMPLES_ROOT_DIRECTORY + "%s".formatted(fileName));
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
     }
