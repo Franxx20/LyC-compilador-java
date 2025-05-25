@@ -87,7 +87,6 @@ IntegerConstant = 0 | [1-9]{Digit}*
 FloatConstant = {Digit}+\.{Digit}* | \.{Digit}+
 StringConstant = \"(.*)\"
 
-//Comment = "#+"[^*]~"+#"
 Comment = "#+"([^#]|#+[^#+])*"+#"
 
 %%
