@@ -149,7 +149,6 @@ term                ::= term MULT factor {: System.out.println("*"); :} |
 factor              ::= IDENTIFIER:id
                         {:
                             System.out.println("Id: " + id);
-                            SymbolTableGenerator.insertVariable(id.toString(), "id");
                         :}
                         |
                         SUB IDENTIFIER:id {: System.out.println("Id: " + id); :} |

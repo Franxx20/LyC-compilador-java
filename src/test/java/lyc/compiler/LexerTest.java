@@ -25,6 +25,20 @@ public class LexerTest {
     assertThat(nextToken()).isEqualTo(ParserSym.EOF);
   }
 
+  @Test
+  public void validCommen() throws Exception{
+    scan("#+This is a valid # + + # comment+#");
+    assertThat(nextToken()).isEqualTo(ParserSym.EOF);
+  }
+
+  @Test
+  public void invalidComment() throws Exception{
+    assertThrows(UnknownCharacterException.class, () -> {
+      scan("#+This is an invalid #+ +# comment+#");
+      nextToken();
+    });
+  }
+
 
   @Test
   public void invalidStringConstantLength() {
@@ -33,17 +47,6 @@ public class LexerTest {
       nextToken();
     });
   }
-
-// ID NO REQUIERE NINGUN LIMITE DE TAMAÑO
-//
-//  @Test
-//  public void invalidIdLength() {
-//    assertThrows(InvalidLengthException.class, () -> {
-//      scan(getRandomString());
-//      nextToken();
-//    });
-//  }
-
 
   @Test
   public void invalidPositiveIntegerConstantValue() {

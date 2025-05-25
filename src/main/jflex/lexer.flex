@@ -24,17 +24,6 @@ import javax.management.RuntimeErrorException;import static lyc.compiler.constan
       return new Symbol(type, yyline, yycolumn);
     }
     private Symbol symbol(int type, Object value) {
-//        switch(type){
-//            case ParserSym.INTEGER_CONSTANT:
-//                SymbolTableGenerator.insertConstant(value.toString(), "integer");
-//                break;
-//            case ParserSym.FLOAT_CONSTANT:
-//                SymbolTableGenerator.insertConstant(value.toString(), "float");
-//                break;
-//            case ParserSym.STRING_CONSTANT:
-//                SymbolTableGenerator.insertConstant(value.toString(), "string");
-//                break;
-//        }
       return new Symbol(type, yyline, yycolumn, value);
     }
 %}
@@ -98,7 +87,7 @@ IntegerConstant = 0 | [1-9]{Digit}*
 FloatConstant = {Digit}+\.{Digit}* | \.{Digit}+
 StringConstant = \"(.*)\"
 
-Comment = "#+"[^*]~"+#"
+Comment = "#+"([^#]|#+[^#+])*"+#"
 
 %%
 
@@ -151,7 +140,11 @@ Comment = "#+"[^*]~"+#"
   {NegativeCalculationFunction}             { return symbol(ParserSym.NEGATIVE_CALCULATION_FUNCTION); }
 
   /* identifiers */
-  {Identifier}                              { return symbol(ParserSym.IDENTIFIER, yytext()); }
+  {Identifier}                              {
+                                                String value = yytext();
+                                                SymbolTableGenerator.insertVariable(value, "id");
+                                                return symbol(ParserSym.IDENTIFIER, yytext());
+                                            }
 
   /* Constants */
   {IntegerConstant}                         {
