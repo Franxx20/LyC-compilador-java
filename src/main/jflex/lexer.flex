@@ -140,7 +140,11 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
   {NegativeCalculationFunction}             { return symbol(ParserSym.NEGATIVE_CALCULATION_FUNCTION); }
 
   /* identifiers */
-  {Identifier}                              { return symbol(ParserSym.IDENTIFIER, yytext()); }
+  {Identifier}                              {
+                                                String value = yytext();
+                                                SymbolTableGenerator.insertVariable(value, "id");
+                                                return symbol(ParserSym.IDENTIFIER, yytext());
+                                            }
 
   /* Constants */
   {IntegerConstant}                         {
