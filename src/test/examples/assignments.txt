@@ -4,3 +4,5 @@ a = .9999
 
 b = "@sdADaSjfla%dfg"
 b = "asldk  fh sjf"
+variable = -129
+negnum = 1 - -3

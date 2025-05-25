@@ -2,6 +2,7 @@ package lyc.compiler;
 
 import java_cup.runtime.*;
 import lyc.compiler.files.SymbolTableGenerator;
+import lyc.compiler.files.TercetoManager;
 
 class Parser;
 
@@ -88,6 +89,7 @@ non terminal write_args;
 // Start Symbol Definition
 start with start_symbol;
 
+
 // Rules
 start_symbol        ::= program {: System.out.println("End"); :}
                         ;
@@ -146,11 +148,7 @@ term                ::= term MULT factor {: System.out.println("*"); :} |
                         factor {: System.out.println("Term = factor"); :}
                         ;
 
-factor              ::= IDENTIFIER:id
-                        {:
-                            System.out.println("Id: " + id);
-                        :}
-                        |
+factor              ::= IDENTIFIER:id {:System.out.println("Id: " + id);:} |
                         SUB IDENTIFIER:id {: System.out.println("Id: " + id); :} |
                         constant:cte {: System.out.println("Constant: " + cte); :} |
                         SUB constant:cte {: System.out.println("Constant: " + "-"+ cte); :} |

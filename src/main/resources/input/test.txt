@@ -44,8 +44,8 @@ if (not a > b)
 }
 
 a = 1
-b = 1
-c = 2
+b = -1
+c = -2
 
 if (a > b or c > b)
 {
@@ -56,8 +56,9 @@ read(a)
 read(b)
 read(c)
 
-a = 1
-b = 3
+a = -1
+b = -3
+negativenum = -2 - -3
 
 while (a > b)
 {
@@ -71,3 +72,4 @@ write(a)
 reorder([x+3, 1+1, 9-x],1,2)
 
 x = negativeCalculation(-4.0, 2.3, c, 5.6)
+variable = -123
