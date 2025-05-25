@@ -24,17 +24,6 @@ import javax.management.RuntimeErrorException;import static lyc.compiler.constan
       return new Symbol(type, yyline, yycolumn);
     }
     private Symbol symbol(int type, Object value) {
-//        switch(type){
-//            case ParserSym.INTEGER_CONSTANT:
-//                SymbolTableGenerator.insertConstant(value.toString(), "integer");
-//                break;
-//            case ParserSym.FLOAT_CONSTANT:
-//                SymbolTableGenerator.insertConstant(value.toString(), "float");
-//                break;
-//            case ParserSym.STRING_CONSTANT:
-//                SymbolTableGenerator.insertConstant(value.toString(), "string");
-//                break;
-//        }
       return new Symbol(type, yyline, yycolumn, value);
     }
 %}

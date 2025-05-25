@@ -34,17 +34,6 @@ public class LexerTest {
     });
   }
 
-// ID NO REQUIERE NINGUN LIMITE DE TAMAÑO
-//
-//  @Test
-//  public void invalidIdLength() {
-//    assertThrows(InvalidLengthException.class, () -> {
-//      scan(getRandomString());
-//      nextToken();
-//    });
-//  }
-
-
   @Test
   public void invalidPositiveIntegerConstantValue() {
     assertThrows(InvalidIntegerException.class, () -> {
