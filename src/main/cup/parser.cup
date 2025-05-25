@@ -119,8 +119,16 @@ list_declaration    ::= list_declaration var_list COLON var_type {: System.out.p
                         var_list COLON var_type {: System.out.println("list_declaration = var_list : var_type"); :}
                         ;
 
-var_list            ::= var_list COMMA IDENTIFIER {: System.out.println("var_list = var_list , IDENTIFIER"); :} |
-                        IDENTIFIER {: System.out.println("var_list = IDENTIFIER"); :}
+var_list            ::= var_list COMMA IDENTIFIER:id
+                        {:
+                        System.out.println("var_list = var_list , IDENTIFIER");
+                        SymbolTableGenerator.insertVariable(id.toString(), "id");
+                        :} |
+                        IDENTIFIER:id
+                        {:
+                        System.out.println("var_list = IDENTIFIER");
+                        SymbolTableGenerator.insertVariable(id.toString(), "id");
+                        :}
                         ;
 
 var_type            ::= TYPE_INT {: System.out.println("int"); :} |
