@@ -1,11 +1,16 @@
 package lyc.compiler;
 
 import java_cup.runtime.*;
+import java.util.Stack;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.IntermediateCodeGenerator;
 import lyc.compiler.files.TripleManager;
 
 class Parser;
+
+action code {:
+  private Stack<Integer> jumpStack = new Stack<>();
+:}
 
 // Terminals
 
@@ -66,15 +71,16 @@ non terminal iteration;
 non terminal selection;
 non terminal sentence;
 non terminal assignment;
+
 non terminal String expression;
 non terminal String term;
 non terminal String factor;
 non terminal String constant;
-non terminal condition;
-non terminal logic_term;
-non terminal logic_factor;
-non terminal comparation;
-non terminal comparator;
+
+non terminal String condition;
+non terminal String comparation;
+non terminal String comparator;
+
 non terminal list_declaration;
 non terminal var_list;
 non terminal var_type;
@@ -94,7 +100,6 @@ start with start_symbol;
 start_symbol        ::= program
                         {:
                             System.out.println("End");
-
                         :}
                         ;
 
@@ -127,13 +132,50 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
                         ;
 
 selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {: System.out.println("selection = if (condition) { program }"); :} |
-                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {: System.out.println("selection = if (condition) { program } else { program }"); :}
+                        {:
+                            // Desapilamos el caso falso de la condición para saltar al final
+                            int falseIdx = jumpStack.pop();
+                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 1);
+
+                            System.out.println("selection = if (condition) { program }");
+                        :} |
+                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {:
+                            // Desapilamos el caso falso de la condición para saltar al else
+                            int falseIdx = jumpStack.pop();
+                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 2);
+
+                            // Si fue verdadero nos saltamos el else
+                            int biIdx = TripleManager.addTriple("BI", "J", null);
+                            jumpStack.push(biIdx);
+                        :}
+                        ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {:
+                            // Si fue verdadero nos saltamos el else
+                            int biIdx = jumpStack.pop();
+
+                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
+                            System.out.println("selection = if (condition) { program } else { program }");
+                        :}
                         ;
 
-iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {: System.out.println("while (condition) { program }"); :};
+iteration           ::= WHILE OPEN_BRACKET {:
+                            // Para volver al principio a iterar
+                            int etIdx = TripleManager.addTriple("ET", "WHILE", null);
+                            jumpStack.push(etIdx);
+                        :}
+                        condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {:
+                            // Desapilamos el caso falso de la condición para salir del while
+                            int falseIdx = jumpStack.pop();
+                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 2);
+
+                            // Bifurcación para volver a evaluar la condición
+                            int etIdx = jumpStack.pop();
+                            int biIdx = TripleManager.addTriple("BI", "[" + etIdx + "]", null);
+
+                            System.out.println("while (condition) { program }");
+                        :};
 
 var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET {: System.out.println("init { list_declaration }"); :};
 
@@ -231,27 +273,129 @@ constant            ::= INTEGER_CONSTANT:i
                         :}
                         ;
 
-condition           ::= condition OR logic_term {: System.out.println("condition = condition OR logic_term"); :} |
-                        logic_term {: System.out.println("condition = logic_term"); :}
-                        ;
+// cuando se pase por esta regla, siempre se saldrá de acá con un sólo índice apilado, el que corresponda al salto por falso
+// Puse J por Jump donde iría el salto
+condition           ::= comparation:c
+                        {:
+                            int falseIdx = TripleManager.addTriple(c, "J", null);
+                            // Se apila para hacer el salto por caso falso
+                            jumpStack.push(falseIdx);
 
-logic_term          ::= logic_term AND logic_factor {: System.out.println("logic_term = logic_term AND logic_factor"); :} |
-                        logic_factor {: System.out.println("logic_term = logic_factor"); :}
-                        ;
+                            System.out.println("condition = comparation");
+                        :}
+                        |
+                        comparation:c1
+                        {:
+                            int falseIdx1 = TripleManager.addTriple(c1, "J", null);
 
-logic_factor        ::= NOT logic_factor {: System.out.println("logic_factor = NOT logic_factor"); :} |
-                        comparation {: System.out.println("logic_factor = comparation"); :} |
-                        OPEN_BRACKET condition CLOSE_BRACKET {: System.out.println("logic_factor = ( expression )"); :}
-                        ;
+                            int trueIdx1 = TripleManager.addTriple("BI", "J", null);
+                            // Si fue verdadera se apila para despues saltar a la parte verdadera
+                            jumpStack.push(trueIdx1);
 
-comparation         ::= expression comparator expression {: System.out.println("comparation = expression comparator expression"); :};
+                            int etIdx = TripleManager.addTriple("ET", "OR", null); // es solo la etiqueta, no se si va
 
-comparator          ::= EQUAL {: System.out.println("=="); :}|
-                        NOT_EQUAL {: System.out.println("!="); :} |
-                        LESS_EQUAL {: System.out.println("<="); :} |
-                        GREATER_EQUAL {: System.out.println(">="); :} |
-                        LESS {: System.out.println("<"); :} |
-                        GREATER {: System.out.println(">"); :}
+                            // Si la primera comparacion fue falsa, hace un pequeño salto sobre el BI por verdadera
+                            TripleManager.patchTriple(falseIdx1, etIdx + 1);
+                        :}
+                        OR comparation:c2
+                        {:
+                            // Desapilamos ese idx de recien para hacer el salto por verdadera
+                            int trueIdx1 = jumpStack.pop();
+
+                            int falseIdx2 = TripleManager.addTriple(c2, "J", null);
+                            // Se apila para hacer el salto por caso falso, porque ambas dieron falsas
+                            jumpStack.push(falseIdx2);
+
+                            // Ahora sí hacemos el salto si la primera fue verdadera
+                            TripleManager.patchTriple(trueIdx1, falseIdx2 + 1);
+
+                            System.out.println("condition = comparation OR comparation");
+                        :}
+                        |
+                        comparation:c1
+                        {:
+                            int falseIdx1 = TripleManager.addTriple(c1, "J", null);
+                            // Si la primera ya es falsa, va a salir por falso
+                            jumpStack.push(falseIdx1);
+
+                            int etIdx = TripleManager.addTriple("ET", "AND", null); // es solo la etiqueta, no se si va
+                        :}
+                        AND comparation:c2
+                        {:
+                            int falseIdx2 = TripleManager.addTriple(c2, "J", null);
+                            // Si la segunda es falsa, tambien va a salir por falso
+
+                            int trueIdx = TripleManager.addTriple("BI", "J", null);
+                            // Si ambas son verdaderas, quiero hacer un pequeño salto sobre los tercetos que vienen ahora (hacia index5 + 1)
+
+                            // Ambos indices del salto por falso saltan a la misma lazy
+                            int lazyIdx = TripleManager.addTriple("ET", "LAZY_AND", null);
+                            TripleManager.patchTriple(falseIdx2, lazyIdx);
+                            int falseIdx1 = jumpStack.pop();
+                            TripleManager.patchTriple(falseIdx1, lazyIdx);
+
+                            // Despues de que los dos falsos salten a la lazy, se apila la bifurcacion por falso
+                            int biIdx = TripleManager.addTriple("BI", "J", null);
+                            jumpStack.push(biIdx);
+
+                            // Hago ese saltito
+                            TripleManager.patchTriple(trueIdx, biIdx + 1);
+                            System.out.println("condition = comparation AND comparation");
+                        :}
+                        |
+                        NOT comparation:c
+                        {:
+                            int falseIdx = TripleManager.addTriple(c, "J", null);
+
+                            // Bifurcación para salir por caso falso (o sea verdadero)
+                            int trueIdx = TripleManager.addTriple("BI", "J", null);
+                            jumpStack.push(trueIdx);
+
+                            // Si fue verdadero (o sea falso) hace un saltito sobre la bifurcación
+                            TripleManager.patchTriple(falseIdx,trueIdx + 1);
+
+                            int etIdx = TripleManager.addTriple("ET", "NOT", null); // es solo la etiqueta, no se si va
+
+                            System.out.println("condition = NOT comparation");
+                        :};
+
+comparation         ::= expression:e1 comparator:c expression:e2
+                        {:
+                            TripleManager.addTriple("CMP", "[" + e1 + "]", "[" + e2 + "]");
+                            RESULT = c;
+                            System.out.println("comparation = expression comparator expression");
+                        :};
+
+comparator          ::= EQUAL
+                        {:
+                            RESULT = "BNE";
+                            System.out.println("==");
+                        :}|
+                        NOT_EQUAL
+                        {:
+                            RESULT = "BEQ";
+                            System.out.println("!=");
+                        :} |
+                        LESS_EQUAL
+                        {:
+                            RESULT = "BGT";
+                            System.out.println("<=");
+                        :} |
+                        GREATER_EQUAL
+                        {:
+                            RESULT = "BLT";
+                            System.out.println(">=");
+                        :} |
+                        LESS
+                        {:
+                            RESULT = "BGE";
+                            System.out.println("<");
+                        :} |
+                        GREATER
+                        {:
+                            RESULT = "BLE";
+                            System.out.println(">");
+                        :}
                         ;
 
 function            ::= reorder_function  {: System.out.println("function = reorder_function"); :} |
