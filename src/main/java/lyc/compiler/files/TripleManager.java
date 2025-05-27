@@ -15,20 +15,6 @@ public class TripleManager {
         return triples.size() - 1;
     }
 
-    public static void patchTriple(int index, int jump) {
-        if (index < 0 || index >= triples.size()) {
-            throw new IndexOutOfBoundsException("Índice de triple inválido: " + index);
-        }
-        Triple t = triples.get(index);
-
-        String jumpStr = Integer.toString(jump);
-        t.setOperand1("[" + jumpStr + "]");
-    }
-
-    public static int getLastIndex() {
-        return triples.isEmpty() ? -1 : triples.size() - 1;
-    }
-
     public static List<Triple> getTriples() {
         return new ArrayList<>(triples);
     }
@@ -52,7 +38,5 @@ public class TripleManager {
         public String getOperator() { return operator; }
         public String getOperand1() { return operand1; }
         public String getOperand2() { return operand2; }
-
-        private void setOperand1(String operand1) { this.operand1 = operand1; }
     }
 }

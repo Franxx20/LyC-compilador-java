@@ -1,16 +1,9 @@
 package lyc.compiler;
 
 import java_cup.runtime.*;
-import java.util.Stack;
 import lyc.compiler.files.SymbolTableGenerator;
-import lyc.compiler.files.IntermediateCodeGenerator;
-import lyc.compiler.files.TripleManager;
 
 class Parser;
-
-action code {:
-  private Stack<Integer> jumpStack = new Stack<>();
-:}
 
 // Terminals
 
@@ -58,10 +51,10 @@ terminal NOT;
 terminal REORDER_FUNCTION;
 terminal NEGATIVE_CALCULATION_FUNCTION;
 
-terminal String INTEGER_CONSTANT;
-terminal String FLOAT_CONSTANT;
-terminal String STRING_CONSTANT;
-terminal String IDENTIFIER;
+terminal INTEGER_CONSTANT;
+terminal FLOAT_CONSTANT;
+terminal STRING_CONSTANT;
+terminal IDENTIFIER;
 
 // Non Terminals
 non terminal start_symbol;
@@ -71,22 +64,21 @@ non terminal iteration;
 non terminal selection;
 non terminal sentence;
 non terminal assignment;
-
-non terminal String expression;
-non terminal String term;
-non terminal String factor;
-non terminal String constant;
-
-non terminal String condition;
-non terminal String comparation;
-non terminal String comparator;
-
+non terminal expression;
+non terminal term;
+non terminal factor;
+non terminal condition;
+non terminal logic_term;
+non terminal logic_factor;
+non terminal comparation;
+non terminal comparator;
 non terminal list_declaration;
 non terminal var_list;
 non terminal var_type;
 non terminal function;
 non terminal negative_function;
 non terminal reorder_function;
+non terminal constant;
 non terminal arguments;
 non terminal arguments_list;
 non terminal float_list;
@@ -97,10 +89,7 @@ non terminal write_args;
 start with start_symbol;
 
 // Rules
-start_symbol        ::= program
-                        {:
-                            System.out.println("End");
-                        :}
+start_symbol        ::= program {: System.out.println("End"); :}
                         ;
 
 program             ::= program sentence {: System.out.println("program = program sentence"); :} |
@@ -114,68 +103,15 @@ sentence            ::= assignment {: System.out.println("sentence = assignment"
                         function {: System.out.println("sentence = function"); :}
                         ;
 
-assignment          ::= IDENTIFIER:id ASSIG expression:e
-                        {:
-                            TripleManager.addTriple(":=", id, "[" + e + "]");
-                            System.out.println("assignment = id=expression");
-                        :} |
-                        IDENTIFIER:id ASSIG negative_function:nf
-                        {:
-                            TripleManager.addTriple(":=", id, "[" + nf + "]");
-                            System.out.println("assignment = id=negative_function");
-                        :} |
-                        IDENTIFIER:id ASSIG STRING_CONSTANT:sc
-                        {:
-                            TripleManager.addTriple(":=", id, sc);
-                            System.out.println("assignment = id=string_constant");
-                        :}
+assignment          ::= IDENTIFIER ASSIG expression {: System.out.println("assignment = id=expression"); :} |
+                        IDENTIFIER ASSIG negative_function {: System.out.println("assignment = id=negative_function"); :}
                         ;
 
-selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {:
-                            // Desapilamos el caso falso de la condición para saltar al final
-                            int falseIdx = jumpStack.pop();
-                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 1);
-
-                            System.out.println("selection = if (condition) { program }");
-                        :} |
-                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {:
-                            // Desapilamos el caso falso de la condición para saltar al else
-                            int falseIdx = jumpStack.pop();
-                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 2);
-
-                            // Si fue verdadero nos saltamos el else
-                            int biIdx = TripleManager.addTriple("BI", "J", null);
-                            jumpStack.push(biIdx);
-                        :}
-                        ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {:
-                            // Si fue verdadero nos saltamos el else
-                            int biIdx = jumpStack.pop();
-
-                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
-                            System.out.println("selection = if (condition) { program } else { program }");
-                        :}
+selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("selection = if (condition) { program }"); :} |
+                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("selection = if (condition) { program } else { program }"); :}
                         ;
 
-iteration           ::= WHILE OPEN_BRACKET {:
-                            // Para volver al principio a iterar
-                            int etIdx = TripleManager.addTriple("ET", "WHILE", null);
-                            jumpStack.push(etIdx);
-                        :}
-                        condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {:
-                            // Desapilamos el caso falso de la condición para salir del while
-                            int falseIdx = jumpStack.pop();
-                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 2);
-
-                            // Bifurcación para volver a evaluar la condición
-                            int etIdx = jumpStack.pop();
-                            int biIdx = TripleManager.addTriple("BI", "[" + etIdx + "]", null);
-
-                            System.out.println("while (condition) { program }");
-                        :};
+iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("while (condition) { program }"); :};
 
 var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET {: System.out.println("init { list_declaration }"); :};
 
@@ -184,9 +120,15 @@ list_declaration    ::= list_declaration var_list COLON var_type {: System.out.p
                         ;
 
 var_list            ::= var_list COMMA IDENTIFIER:id
-                        {:System.out.println("var_list = var_list , IDENTIFIER");:} |
+                        {:
+                        System.out.println("var_list = var_list , IDENTIFIER");
+                        SymbolTableGenerator.insertVariable(id.toString(), "id");
+                        :} |
                         IDENTIFIER:id
-                        {:System.out.println("var_list = IDENTIFIER");:}
+                        {:
+                        System.out.println("var_list = IDENTIFIER");
+                        SymbolTableGenerator.insertVariable(id.toString(), "id");
+                        :}
                         ;
 
 var_type            ::= TYPE_INT {: System.out.println("int"); :} |
@@ -194,224 +136,66 @@ var_type            ::= TYPE_INT {: System.out.println("int"); :} |
                         TYPE_STRING {: System.out.println("string"); :}
                         ;
 
-expression          ::= expression:e PLUS term:t
-                        {:
-                            int index = TripleManager.addTriple("+", "[" + e + "]", "[" + t + "]");
-                            RESULT = Integer.toString(index);
-                            System.out.println("+");
-                        :} |
-                        expression:e SUB term:t
-                        {:
-                            int index = TripleManager.addTriple("-", "[" + e + "]", "[" + t + "]");
-                            RESULT = Integer.toString(index);
-                            System.out.println("-");
-                        :} |
-                        term:t
-                        {:
-                            RESULT = t;
-                            System.out.println("Expression = Term");
-                        :}
+expression          ::= expression PLUS term {: System.out.println("+"); :} |
+                        expression SUB term {: System.out.println("-"); :} |
+                        term {: System.out.println("Expression = Term"); :}
                         ;
 
-term                ::= term:t MULT factor:f
-                        {:
-                            int index = TripleManager.addTriple("*", "[" + t + "]", "[" + f + "]");
-                            RESULT = Integer.toString(index);
-                            System.out.println("*");
-                        :} |
-                        term:t DIV factor:f
-                        {:
-                            int index = TripleManager.addTriple("/", "[" + t + "]", "[" + f + "]");
-                            RESULT = Integer.toString(index);
-                            System.out.println("/");
-                        :} |
-                        factor:f
-                        {:
-                            RESULT = f;
-                            System.out.println("Term = factor");
-                        :}
+term                ::= term MULT factor {: System.out.println("*"); :} |
+                        term DIV factor {: System.out.println("/"); :} |
+                        factor {: System.out.println("Term = factor"); :}
                         ;
 
 factor              ::= IDENTIFIER:id
                         {:
-                            int index = TripleManager.addTriple(id, null, null);
-                            RESULT = Integer.toString(index);
                             System.out.println("Id: " + id);
-                        :} |
-                        SUB IDENTIFIER:id
-                        {:
-                            int index = TripleManager.addTriple("-", id, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Negated Id: " + id);
-                        :} |
-                        constant:cte
-                        {:
-                            int index = TripleManager.addTriple(cte, null, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Constant: " + cte);
-                        :} |
-                        SUB constant:cte
-                        {:
-                            int index = TripleManager.addTriple("-", cte, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Negated Constant: " + cte);
-                        :} |
-                        OPEN_BRACKET expression:e CLOSE_BRACKET
-                        {:
-                            RESULT = e;
-                            System.out.println("Factor = (Expression)");
                         :}
+                        |
+                        SUB IDENTIFIER:id {: System.out.println("Id: " + id); :} |
+                        constant:cte {: System.out.println("Constant: " + cte); :} |
+                        SUB constant:cte {: System.out.println("Constant: " + "-"+ cte); :} |
+                        OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :}
                         ;
 
-constant            ::= INTEGER_CONSTANT:i
-                        {:
-                            RESULT = i;
-                        :} |
-                        FLOAT_CONSTANT:f
-                        {:
-                            RESULT = f;
-                        :}
+constant            ::= INTEGER_CONSTANT:i {: RESULT = i; :} |
+                        FLOAT_CONSTANT:f {: RESULT = f; :} |
+                        STRING_CONSTANT:s {: RESULT = s; :}
                         ;
 
-// cuando se pase por esta regla, siempre se saldrá de acá con un sólo índice apilado, el que corresponda al salto por falso
-// Puse J por Jump donde iría el salto
-condition           ::= comparation:c
-                        {:
-                            int falseIdx = TripleManager.addTriple(c, "J", null);
-                            // Se apila para hacer el salto por caso falso
-                            jumpStack.push(falseIdx);
+condition           ::= condition OR logic_term {: System.out.println("condition = condition OR logic_term"); :} |
+                        logic_term {: System.out.println("condition = logic_term"); :}
+                        ;
 
-                            System.out.println("condition = comparation");
-                        :}
-                        |
-                        comparation:c1
-                        {:
-                            int falseIdx1 = TripleManager.addTriple(c1, "J", null);
+logic_term          ::= logic_term AND logic_factor {: System.out.println("logic_term = logic_term AND logic_factor"); :} |
+                        logic_factor {: System.out.println("logic_term = logic_factor"); :}
+                        ;
 
-                            int trueIdx1 = TripleManager.addTriple("BI", "J", null);
-                            // Si fue verdadera se apila para despues saltar a la parte verdadera
-                            jumpStack.push(trueIdx1);
+logic_factor        ::= NOT logic_factor {: System.out.println("logic_factor = NOT logic_factor"); :} |
+                        comparation {: System.out.println("logic_factor = comparation"); :} |
+                        OPEN_BRACKET condition CLOSE_BRACKET {: System.out.println("logic_factor = ( expression )"); :}
+                        ;
 
-                            int etIdx = TripleManager.addTriple("ET", "OR", null); // es solo la etiqueta, no se si va
+comparation         ::= expression comparator expression {: System.out.println("comparation = expression comparator expression"); :};
 
-                            // Si la primera comparacion fue falsa, hace un pequeño salto sobre el BI por verdadera
-                            TripleManager.patchTriple(falseIdx1, etIdx + 1);
-                        :}
-                        OR comparation:c2
-                        {:
-                            // Desapilamos ese idx de recien para hacer el salto por verdadera
-                            int trueIdx1 = jumpStack.pop();
-
-                            int falseIdx2 = TripleManager.addTriple(c2, "J", null);
-                            // Se apila para hacer el salto por caso falso, porque ambas dieron falsas
-                            jumpStack.push(falseIdx2);
-
-                            // Ahora sí hacemos el salto si la primera fue verdadera
-                            TripleManager.patchTriple(trueIdx1, falseIdx2 + 1);
-
-                            System.out.println("condition = comparation OR comparation");
-                        :}
-                        |
-                        comparation:c1
-                        {:
-                            int falseIdx1 = TripleManager.addTriple(c1, "J", null);
-                            // Si la primera ya es falsa, va a salir por falso
-                            jumpStack.push(falseIdx1);
-
-                            int etIdx = TripleManager.addTriple("ET", "AND", null); // es solo la etiqueta, no se si va
-                        :}
-                        AND comparation:c2
-                        {:
-                            int falseIdx2 = TripleManager.addTriple(c2, "J", null);
-                            // Si la segunda es falsa, tambien va a salir por falso
-
-                            int trueIdx = TripleManager.addTriple("BI", "J", null);
-                            // Si ambas son verdaderas, quiero hacer un pequeño salto sobre los tercetos que vienen ahora (hacia index5 + 1)
-
-                            // Ambos indices del salto por falso saltan a la misma lazy
-                            int lazyIdx = TripleManager.addTriple("ET", "LAZY_AND", null);
-                            TripleManager.patchTriple(falseIdx2, lazyIdx);
-                            int falseIdx1 = jumpStack.pop();
-                            TripleManager.patchTriple(falseIdx1, lazyIdx);
-
-                            // Despues de que los dos falsos salten a la lazy, se apila la bifurcacion por falso
-                            int biIdx = TripleManager.addTriple("BI", "J", null);
-                            jumpStack.push(biIdx);
-
-                            // Hago ese saltito
-                            TripleManager.patchTriple(trueIdx, biIdx + 1);
-                            System.out.println("condition = comparation AND comparation");
-                        :}
-                        |
-                        NOT comparation:c
-                        {:
-                            int falseIdx = TripleManager.addTriple(c, "J", null);
-
-                            // Bifurcación para salir por caso falso (o sea verdadero)
-                            int trueIdx = TripleManager.addTriple("BI", "J", null);
-                            jumpStack.push(trueIdx);
-
-                            // Si fue verdadero (o sea falso) hace un saltito sobre la bifurcación
-                            TripleManager.patchTriple(falseIdx,trueIdx + 1);
-
-                            int etIdx = TripleManager.addTriple("ET", "NOT", null); // es solo la etiqueta, no se si va
-
-                            System.out.println("condition = NOT comparation");
-                        :};
-
-comparation         ::= expression:e1 comparator:c expression:e2
-                        {:
-                            TripleManager.addTriple("CMP", "[" + e1 + "]", "[" + e2 + "]");
-                            RESULT = c;
-                            System.out.println("comparation = expression comparator expression");
-                        :};
-
-comparator          ::= EQUAL
-                        {:
-                            RESULT = "BNE";
-                            System.out.println("==");
-                        :}|
-                        NOT_EQUAL
-                        {:
-                            RESULT = "BEQ";
-                            System.out.println("!=");
-                        :} |
-                        LESS_EQUAL
-                        {:
-                            RESULT = "BGT";
-                            System.out.println("<=");
-                        :} |
-                        GREATER_EQUAL
-                        {:
-                            RESULT = "BLT";
-                            System.out.println(">=");
-                        :} |
-                        LESS
-                        {:
-                            RESULT = "BGE";
-                            System.out.println("<");
-                        :} |
-                        GREATER
-                        {:
-                            RESULT = "BLE";
-                            System.out.println(">");
-                        :}
+comparator          ::= EQUAL {: System.out.println("=="); :}|
+                        NOT_EQUAL {: System.out.println("!="); :} |
+                        LESS_EQUAL {: System.out.println("<="); :} |
+                        GREATER_EQUAL {: System.out.println(">="); :} |
+                        LESS {: System.out.println("<"); :} |
+                        GREATER {: System.out.println(">"); :}
                         ;
 
 function            ::= reorder_function  {: System.out.println("function = reorder_function"); :} |
+                        negative_function {: System.out.println("function = negative_function"); :} |
                         READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("function = read ( IDENTIFIER )"); :} |
                         WRITE OPEN_BRACKET write_args CLOSE_BRACKET {: System.out.println("function = write ( write_args )"); :}
                         ;
 
 write_args          ::= IDENTIFIER {: System.out.println("write_args = IDENTIFIER"); :} |
-                        STRING_CONSTANT {: System.out.println("write_args = STRING_CONSTANT"); :}
+                        constant {: System.out.println("write_args = constant"); :}
                         ;
 
-reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder_function = reorder ( arguments )"); :}
-                        ;
-
-arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT
-                        {: System.out.println("arguments = [arguments_list], integer_constant, integer_constant"); :}
+arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT {: System.out.println("arguments = [arguments_list], integer_constant, integer_constant"); :}
                         ;
 
 arguments_list      ::= arguments_list COMMA expression {: System.out.println("arguments_list = arguments_list , expression"); :} |
@@ -421,11 +205,15 @@ arguments_list      ::= arguments_list COMMA expression {: System.out.println("a
 negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET {: System.out.println("negative_function = negativeCalculation ( float_list )"); :}
                         ;
 
+reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder_function = reorder ( arguments )"); :}
+                        ;
+
 float_list          ::= float_element:f {: System.out.println("float_list =" + f); :} |
                         float_list COMMA float_element {: System.out.println("float_list , float_element"); :}
                         ;
 
 float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
                         FLOAT_CONSTANT:f {: RESULT = f; :} |
+                        SUB IDENTIFIER:id  {: RESULT = id; :} |
                         SUB FLOAT_CONSTANT:f {: RESULT = f; :}
                         ;
