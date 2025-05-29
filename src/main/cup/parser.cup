@@ -2,6 +2,7 @@ package lyc.compiler;
 
 import java_cup.runtime.*;
 import lyc.compiler.files.SymbolTableGenerator;
+import lyc.compiler.files.TripleManager;
 
 class Parser;
 
@@ -104,7 +105,8 @@ sentence            ::= assignment {: System.out.println("sentence = assignment"
                         ;
 
 assignment          ::= IDENTIFIER ASSIG expression {: System.out.println("assignment = id=expression"); :} |
-                        IDENTIFIER ASSIG negative_function {: System.out.println("assignment = id=negative_function"); :}
+                        IDENTIFIER ASSIG negative_function {: System.out.println("assignment = id=negative_function"); :} |
+                        IDENTIFIER ASSIG STRING_CONSTANT
                         ;
 
 selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("selection = if (condition) { program }"); :} |
@@ -148,31 +150,24 @@ term                ::= term MULT factor {: System.out.println("*"); :} |
 
 factor              ::= IDENTIFIER:id
                         {:
+                            int index = TripleManager.addTriple(id,null,null);
+                            RESULT = Integer.toString(index);
                             System.out.println("Id: " + id);
-                        :}
-                        |
+                        :} |
                         SUB IDENTIFIER:id {: System.out.println("Id: " + id); :} |
                         constant:cte {: System.out.println("Constant: " + cte); :} |
-                        SUB constant:cte {: System.out.println("Constant: " + "-"+ cte); :} |
+                        SUB constant:cte {: System.out.println("Constant: " + "-" + cte); :} |
                         OPEN_BRACKET expression CLOSE_BRACKET {: System.out.println("Factor = (Expression)"); :}
                         ;
 
 constant            ::= INTEGER_CONSTANT:i {: RESULT = i; :} |
                         FLOAT_CONSTANT:f {: RESULT = f; :} |
-                        STRING_CONSTANT:s {: RESULT = s; :}
                         ;
 
-condition           ::= condition OR logic_term {: System.out.println("condition = condition OR logic_term"); :} |
-                        logic_term {: System.out.println("condition = logic_term"); :}
-                        ;
-
-logic_term          ::= logic_term AND logic_factor {: System.out.println("logic_term = logic_term AND logic_factor"); :} |
-                        logic_factor {: System.out.println("logic_term = logic_factor"); :}
-                        ;
-
-logic_factor        ::= NOT logic_factor {: System.out.println("logic_factor = NOT logic_factor"); :} |
-                        comparation {: System.out.println("logic_factor = comparation"); :} |
-                        OPEN_BRACKET condition CLOSE_BRACKET {: System.out.println("logic_factor = ( expression )"); :}
+condition           ::= comparation |
+                        NOT comparation |
+                        comparation OR comparation |
+                        comparation AND comparation
                         ;
 
 comparation         ::= expression comparator expression {: System.out.println("comparation = expression comparator expression"); :};
@@ -186,12 +181,12 @@ comparator          ::= EQUAL {: System.out.println("=="); :}|
                         ;
 
 function            ::= reorder_function  {: System.out.println("function = reorder_function"); :} |
-                        negative_function {: System.out.println("function = negative_function"); :} |
                         READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("function = read ( IDENTIFIER )"); :} |
                         WRITE OPEN_BRACKET write_args CLOSE_BRACKET {: System.out.println("function = write ( write_args )"); :}
                         ;
 
 write_args          ::= IDENTIFIER {: System.out.println("write_args = IDENTIFIER"); :} |
+                        STRING_CONSTANT {: System.out.println("write_args = str_constant"); :} |
                         constant {: System.out.println("write_args = constant"); :}
                         ;
 
