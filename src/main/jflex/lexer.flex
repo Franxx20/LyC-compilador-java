@@ -157,7 +157,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
 
 
                                                 SymbolTableGenerator.insertConstant("_" + yytext(), "integer");
-                                                return symbol(ParserSym.INTEGER_CONSTANT, value);
+                                                return symbol(ParserSym.INTEGER_CONSTANT, yytext());
                                             }
 
   {FloatConstant}                           {
@@ -171,7 +171,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
                                                 SymbolTableGenerator.insertConstant("_" + yytext(), "float");
-                                                return symbol(ParserSym.FLOAT_CONSTANT, value);
+                                                return symbol(ParserSym.FLOAT_CONSTANT, yytext());
                                             }
 
   {StringConstant}                          {
