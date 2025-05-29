@@ -8,7 +8,8 @@ import java.util.Stack;
 class Parser;
 
 action code {:
-  private Stack<Integer> jumpStack = new Stack<>();
+    private Stack<Integer> jumpStack = new Stack<>();
+    private Stack<Integer> negStack = new Stack<>();
 :}
 
 // Terminals
@@ -90,7 +91,7 @@ non terminal arguments;
 non terminal arguments_list;
 non terminal float_list;
 non terminal float_element;
-non terminal write_args;
+non terminal String write_args;
 
 // Start Symbol Definition
 start with start_symbol;
@@ -396,13 +397,33 @@ comparator          ::= EQUAL
                         :}
                         ;
 
-function            ::= reorder_function  {: System.out.println("function = reorder_function"); :} |
-                        READ OPEN_BRACKET IDENTIFIER CLOSE_BRACKET {: System.out.println("function = read ( IDENTIFIER )"); :} |
-                        WRITE OPEN_BRACKET write_args CLOSE_BRACKET {: System.out.println("function = write ( write_args )"); :}
+function            ::= reorder_function
+                        {:
+
+                            System.out.println("function = reorder_function");
+                        :} |
+                        READ OPEN_BRACKET IDENTIFIER:id CLOSE_BRACKET
+                        {:
+                            TripleManager.addTriple("READ", id, null);
+                            System.out.println("function = read ( IDENTIFIER )");
+                        :} |
+                        WRITE OPEN_BRACKET write_args:a CLOSE_BRACKET
+                        {:
+                            TripleManager.addTriple("WRITE", a, null);
+                            System.out.println("function = write ( write_args )");
+                        :}
                         ;
 
-write_args          ::= IDENTIFIER {: System.out.println("write_args = IDENTIFIER"); :} |
-                        STRING_CONSTANT {: System.out.println("write_args = STRING_CONSTANT"); :}
+write_args          ::= IDENTIFIER:id
+                        {:
+                            RESULT = id;
+                            System.out.println("write_args = IDENTIFIER");
+                        :}|
+                        STRING_CONSTANT:s
+                        {:
+                            RESULT = s;
+                            System.out.println("write_args = STRING_CONSTANT");
+                        :}
                         ;
 
 reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder_function = reorder ( arguments )"); :}
@@ -416,11 +437,120 @@ arguments_list      ::= arguments_list COMMA expression {: System.out.println("a
                         expression {: System.out.println("arguments_list = expression"); :}
                         ;
 
-negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET {: System.out.println("negative_function = negativeCalculation ( float_list )"); :}
+negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET
+                        {:
+                            int multIdx = negStack.pop();
+                            int sumIdx = negStack.pop();
+                            int countIdx = negStack.pop();
+
+                            // if (@count == 0)
+                            //  x = @sum
+                            //  else
+                            //	x = @mult
+
+                            TripleManager.addTriple("CMP", "@count", 0);
+                            int falseIdx = TripleManager.addTriple("BNE", "J", 0);
+
+                            TripleManager.addTriple(":=", "@total", "@sum");
+                            int biIdx = TripleManager.addTriple("BI", "J", 0);
+
+                            TripleManager.addTriple(":=", "@total", "@mult");
+
+                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex());
+                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex()+1);
+
+                            int xIdx = TripleManager.addTriple(":=", "@x", "@total");
+
+                            RESULT = Integer.toString(xIdx);
+
+                            System.out.println("negative_function = negativeCalculation ( float_list )");
+                        :}
                         ;
 
-float_list          ::= float_element:f {: System.out.println("float_list =" + f); :} |
-                        float_list COMMA float_element {: System.out.println("float_list , float_element"); :}
+float_list          ::= float_element:f
+                        {:
+                            TripleManager.addTriple(":=", "@count", 0);
+                            TripleManager.addTriple(":=", "@sum", 0);
+                            TripleManager.addTriple(":=", "@mult", 0);
+
+                            // if (f < 0)
+                            //	 if (@count == 0)
+                            //		 @parBit = 1
+                            //	 else
+                            //		 @parBit = 0
+                            //	 @count = @parBit
+                            //   @sum = @sum + f
+                            //	 @mult = @mult * f
+
+                            TripleManager.addTriple("CMP", f, 0);
+                            int falseIdx1 = TripleManager.addTriple("BGE", "J", 0);
+
+                            TripleManager.addTriple("CMP", "@count", 0);
+                            int falseIdx2 = TripleManager.addTriple("BNE", "J", 0);
+
+                            TripleManager.addTriple(":=", "@parBit", 1);
+                            int biIdx = TripleManager.addTriple("BI", "J", 0);
+
+                            TripleManager.addTriple(":=", "@parBit", 0);
+
+                            TripleManager.patchTriple(falseIdx2, TripleManager.getLastIndex());
+                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
+
+                            int countIdx = TripleManager.addTriple(":=", "@count", "@parBit");
+                            TripleManager.addTriple("+", "@sum", f);
+                            int sumIdx = TripleManager.addTriple(":=", "@sum", TripleManager.getLastIndex());
+                            TripleManager.addTriple("*", "@mult", f);
+                            int multIdx = TripleManager.addTriple(":=", "@mult", TripleManager.getLastIndex());
+
+                            TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
+
+                            negStack.push(countIdx);
+                            negStack.push(sumIdx);
+                            negStack.push(multIdx);
+                            System.out.println("float_list =" + f);
+                        :} |
+                        float_list COMMA float_element:f
+                        {:
+                            negStack.pop();
+                            negStack.pop();
+                            negStack.pop();
+
+                            // if (f < 0)
+                            //	 if (@count == 0)
+                            //		 @parBit = 1
+                            //	 else
+                            //		 @parBit = 0
+                            //	 @count = @parBit
+                            //   @sum = @sum + f
+                            //	 @mult = @mult * f
+
+                            TripleManager.addTriple("CMP", f, 0);
+                            int falseIdx1 = TripleManager.addTriple("BGE", "J", 0);
+
+                            TripleManager.addTriple("CMP", "@count", 0);
+                            int falseIdx2 = TripleManager.addTriple("BNE", "J", 0);
+
+                            TripleManager.addTriple(":=", "@parBit", 1);
+                            int biIdx = TripleManager.addTriple("BI", "J", 0);
+
+                            TripleManager.addTriple(":=", "@parBit", 0);
+
+                            TripleManager.patchTriple(falseIdx2, TripleManager.getLastIndex());
+                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
+
+                            int countIdx = TripleManager.addTriple(":=", "@count", "@parBit");
+                            TripleManager.addTriple("+", "@sum", f);
+                            int sumIdx = TripleManager.addTriple(":=", "@sum", TripleManager.getLastIndex());
+                            TripleManager.addTriple("*", "@mult", f);
+                            int multIdx = TripleManager.addTriple(":=", "@mult", TripleManager.getLastIndex());
+
+                            TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
+
+                            negStack.push(countIdx);
+                            negStack.push(sumIdx);
+                            negStack.push(multIdx);
+                            System.out.println("float_list , float_element");
+                        :}
                         ;
 
 float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
