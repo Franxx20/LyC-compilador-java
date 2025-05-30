@@ -11,10 +11,10 @@ public class SymbolTableGenerator implements FileGenerator{
     public static Hashtable<String, SymbolT> symbolTable = new Hashtable<String, SymbolT>(100);
 
     public static class SymbolT {
-        public String name;
-        public String type;
-        public String value;
-        public int symbolSize;
+        private String name;
+        private String type;
+        private String value;
+        private int symbolSize;
 
         // string constants
         public SymbolT(String name, String type, String value, int symbolSize) {
@@ -57,6 +57,14 @@ public class SymbolTableGenerator implements FileGenerator{
 
         public void setName(String name) {
             this.name = name;
+        }
+
+        public String getType(){
+            return this.type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
         }
 
         @Override
