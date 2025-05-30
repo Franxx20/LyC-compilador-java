@@ -153,8 +153,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                     throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
 
-
-                                                SymbolTableGenerator.insertConstant("_" + yytext(), "integer");
+                                                SymbolTableGenerator.insertConstant("_" + yytext(), "int");
                                                 return symbol(ParserSym.INTEGER_CONSTANT, value);
                                             }
 
@@ -168,6 +167,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                 } catch (NumberFormatException e){
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
+
                                                 SymbolTableGenerator.insertConstant("_" + yytext(), "float");
                                                 return symbol(ParserSym.FLOAT_CONSTANT, value);
                                             }
