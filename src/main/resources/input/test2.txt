@@ -1,0 +1,76 @@
+init {
+    var, foo: string
+    a, b, c, d: int
+    e, f: float
+}
+
+a = 1
+b = 1 + 4
+c = 2 * 5 + b
+d = a + c
+
+if (a > b and c > b)
+{
+    write("a es mas grande que b y c es mas grande que b")
+}
+
+a = -99999.99
+a = 99.
+a = .9999
+
+b = "@sdADaSjfla%dfg"
+b = "asldk  fh sjf"
+
+#+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
+var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
+foo = var
+#+ Esto es un comentario +#
+
+if (a > b)
+{
+    write("a es mas grande que b")
+}
+else
+{
+    write("a es mas chico o igual a b")
+}
+
+
+
+a = 1
+b = 1
+c = 2
+
+if (not a > b)
+{
+    write("a no es mas grande que b")
+}
+
+a = 1
+b = 1
+c = 2
+
+if (a > b or c > b)
+{
+    write("a es mas grande que b o c es mas grande que b")
+}
+
+read(a)
+read(b)
+read(c)
+
+a = 1
+b = 3
+
+while (a > b)
+{
+    write("a es mas grande que b")
+    a = a + 1
+}
+
+write("asdfasdf")
+write(a)
+
+reorder([x+3, 1+1, 9-x],1,2)
+
+x = negativeCalculation(-4.0, 2.3, c, 5.6)
