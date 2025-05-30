@@ -125,9 +125,9 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
   {If}                                      { return symbol(ParserSym.IF); }
   {Else}                                    { return symbol(ParserSym.ELSE); }
   {Init}                                    { return symbol(ParserSym.INIT); }
-  {IntType}                                 { return symbol(ParserSym.TYPE_INT); }
-  {FloatType}                               { return symbol(ParserSym.TYPE_FLOAT); }
-  {StringType}                              { return symbol(ParserSym.TYPE_STRING); }
+  {IntType}                                 { return symbol(ParserSym.TYPE_INT, yytext()); }
+  {FloatType}                               { return symbol(ParserSym.TYPE_FLOAT, yytext()); }
+  {StringType}                              { return symbol(ParserSym.TYPE_STRING, yytext()); }
 
   {And}                                     { return symbol(ParserSym.AND); }
   {Or}                                      { return symbol(ParserSym.OR); }
@@ -142,7 +142,6 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
   /* identifiers */
   {Identifier}                              {
                                                 String value = yytext();
-                                                SymbolTableGenerator.insertVariable(value, "id");
                                                 return symbol(ParserSym.IDENTIFIER, yytext());
                                             }
 
@@ -154,9 +153,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                 } catch (NumberFormatException e){
                                                     throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
-
-
-                                                SymbolTableGenerator.insertConstant("_" + yytext(), "integer");
+                                                //SymbolTableGenerator.insertConstant("_" + yytext(), "integer");
                                                 return symbol(ParserSym.INTEGER_CONSTANT, yytext());
                                             }
 
@@ -170,7 +167,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                 } catch (NumberFormatException e){
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
-                                                SymbolTableGenerator.insertConstant("_" + yytext(), "float");
+                                                //SymbolTableGenerator.insertConstant("_" + yytext(), "float");
                                                 return symbol(ParserSym.FLOAT_CONSTANT, yytext());
                                             }
 
@@ -178,7 +175,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                 if (yylength() > STRING_MAX_LENGTH){
                                                     throw new InvalidLengthException("String lenght is beyond maximum lenght for: " + yytext());
                                                 } else {
-                                                    SymbolTableGenerator.insertConstant("_" + yytext(), "string");
+                                                    //SymbolTableGenerator.insertConstant("_" + yytext(), "string");
                                                     return symbol(ParserSym.STRING_CONSTANT, yytext());
                                                 }
                                             }

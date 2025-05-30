@@ -3,6 +3,7 @@ package lyc.compiler;
 import java_cup.runtime.*;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.TripleManager;
+import java.util.ArrayList;
 import java.util.Stack;
 
 class Parser;
@@ -10,6 +11,7 @@ class Parser;
 action code {:
     private Stack<Integer> jumpStack = new Stack<>();
     private Stack<Integer> negStack = new Stack<>();
+    public ArrayList<String> idList = new ArrayList();
 :}
 
 // Terminals
@@ -44,9 +46,9 @@ terminal WHILE;
 terminal IF;
 terminal ELSE;
 terminal INIT;
-terminal TYPE_INT;
-terminal TYPE_FLOAT;
-terminal TYPE_STRING;
+terminal String TYPE_INT;
+terminal String TYPE_FLOAT;
+terminal String TYPE_STRING;
 
 terminal READ;
 terminal WRITE;
@@ -83,7 +85,7 @@ non terminal String comparator;
 
 non terminal list_declaration;
 non terminal var_list;
-non terminal var_type;
+non terminal String var_type;
 non terminal function;
 non terminal negative_function;
 non terminal reorder_function;
@@ -180,19 +182,49 @@ iteration           ::= WHILE OPEN_BRACKET
 
 var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET {: System.out.println("init { list_declaration }"); :};
 
-list_declaration    ::= list_declaration var_list COLON var_type {: System.out.println("list_declaration = list_declaration var_list : var_type"); :} |
-                        var_list COLON var_type {: System.out.println("list_declaration = var_list : var_type"); :}
+list_declaration    ::= list_declaration var_list COLON var_type:t
+                        {:
+                            SymbolTableGenerator.insertIds(idList, t);
+                            idList.clear();
+
+                            System.out.println("list_declaration = list_declaration var_list : var_type");
+                        :} |
+                        var_list COLON var_type:t
+                        {:
+                            SymbolTableGenerator.insertIds(idList, t);
+                            idList.clear();
+
+                            System.out.println("list_declaration = var_list : var_type");
+                        :}
                         ;
 
 var_list            ::= var_list COMMA IDENTIFIER:id
-                        {:System.out.println("var_list = var_list , IDENTIFIER");:} |
+                        {:
+                            idList.add(id);
+                            System.out.println("var_list = var_list , IDENTIFIER");
+                        :} |
                         IDENTIFIER:id
-                        {:System.out.println("var_list = IDENTIFIER");:}
+                        {:
+                            idList.add(id);
+                            System.out.println("var_list = IDENTIFIER");
+                        :}
                         ;
 
-var_type            ::= TYPE_INT {: System.out.println("int"); :} |
-                        TYPE_FLOAT {: System.out.println("float"); :} |
-                        TYPE_STRING {: System.out.println("string"); :}
+var_type            ::= TYPE_INT:t
+                        {:
+                            RESULT = t;
+                            System.out.println("int");
+                        :} |
+                        TYPE_FLOAT:t
+                        {:
+                            RESULT = t;
+                            System.out.println("float");
+                        :} |
+                        TYPE_STRING:t
+                        {:
+                            RESULT = t;
+                            System.out.println("string");
+                        :}
                         ;
 
 expression          ::= expression:e PLUS term:t
@@ -235,12 +267,15 @@ term                ::= term:t MULT factor:f
 
 factor              ::= IDENTIFIER:id
                         {:
+                            SymbolTableGenerator.validateExistence(id);
+                            SymbolTableGenerator.validateFactor(id);
                             int index = TripleManager.addTriple(id, null, null);
                             RESULT = Integer.toString(index);
                             System.out.println("Id: " + id);
                         :} |
                         SUB IDENTIFIER:id
                         {:
+                            SymbolTableGenerator.validateExistence(id);
                             int index = TripleManager.addTriple("-", id, null);
                             RESULT = Integer.toString(index);
                             System.out.println("Negated Id: " + id);
@@ -404,6 +439,7 @@ function            ::= reorder_function
                         :} |
                         READ OPEN_BRACKET IDENTIFIER:id CLOSE_BRACKET
                         {:
+                            SymbolTableGenerator.validateExistence(id);
                             TripleManager.addTriple("READ", id, null);
                             System.out.println("function = read ( IDENTIFIER )");
                         :} |
@@ -416,6 +452,7 @@ function            ::= reorder_function
 
 write_args          ::= IDENTIFIER:id
                         {:
+                            SymbolTableGenerator.validateExistence(id);
                             RESULT = id;
                             System.out.println("write_args = IDENTIFIER");
                         :}|
@@ -553,7 +590,11 @@ float_list          ::= float_element:f
                         :}
                         ;
 
-float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
+float_element       ::= IDENTIFIER:id
+                        {:
+                            SymbolTableGenerator.validateExistence(id);
+                            RESULT = id;
+                        :} |
                         FLOAT_CONSTANT:f {: RESULT = f; :} |
                         SUB FLOAT_CONSTANT:f {: RESULT = f; :}
                         ;

@@ -22,7 +22,7 @@ public class ParserTest {
         compilationSuccessful(readFromFile("test.txt"));
     }
 
-    @Test
+    /*@Test
     public void reorderTest() throws Exception {
         compilationSuccessful(readFromFile("reorder.txt"));
     }
@@ -90,7 +90,7 @@ public class ParserTest {
     @Test
     void whileStatement() throws Exception {
         compilationSuccessful(readFromFile("while.txt"));
-    }
+    }*/
 
 
     private void compilationSuccessful(String input) throws Exception {

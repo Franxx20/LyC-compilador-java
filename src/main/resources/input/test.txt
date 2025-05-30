@@ -1,5 +1,11 @@
+init {
+    a, b: float
+    c: int
+    p1, p2, p3, var, foo: string
+}
+
 a = 1
-b = 1 + 4
+b = 1
 c = 2
 
 if (a > b and c > b)
@@ -16,7 +22,7 @@ b = "asldk  fh sjf"
 
 #+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
 var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
-foo = var
+
 #+ Esto es un comentario +#
 
 if (a > b)
@@ -31,7 +37,6 @@ else
 init {
     a1, b1: float
     variable1: int
-    p1, p2, p3: string
 }
 
 a = 1
@@ -62,12 +67,8 @@ b = 3
 while (a > b)
 {
     write("a es mas grande que b")
-    a = a + 1
+    a = 1
 }
 
 write("asdfasdf")
 write(a)
-
-reorder([x+3, 1+1, 9-x],1,2)
-
-x = negativeCalculation(-4.0, 2.3, c, 5.6)

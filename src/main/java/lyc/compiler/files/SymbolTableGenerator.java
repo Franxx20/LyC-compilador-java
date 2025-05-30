@@ -2,6 +2,7 @@ package lyc.compiler.files;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Objects;
 
@@ -82,8 +83,31 @@ public class SymbolTableGenerator implements FileGenerator{
         symbolTable.put(name, new SymbolT(name, type, name.replace("_","")));
     }
 
-    static public void insertVariable(String name, String type) {
-        symbolTable.put(name, new SymbolT(name, type));
+    static public void insertIds(ArrayList<String> idList, String type) {
+        for (String name : idList) {
+            if (symbolTable.containsKey(name)) {
+                throw new RuntimeException("Error: identifier '" + name + "' is already declared.");
+            }
+            symbolTable.put(name, new SymbolT(name, type));
+        }
+    }
+
+    static public void validateExistence(String id) {
+        if (!symbolTable.containsKey(id)) {
+            throw new RuntimeException("Error: identifier '" + id + "' does not exist.");
+        }
+
+    }
+
+    static public void validateFactor(String id) {
+        SymbolT sym = symbolTable.get(id);
+        String t = sym.type;
+        if (!"int".equals(t) && !"float".equals(t)) {
+            throw new RuntimeException(
+                    "Error: identifier '" + id + "' has invalid type '" + t
+                            + "' for arithmetic factor; expected int or float."
+            );
+        }
     }
 
     static public SymbolT getSymbol(String name){
