@@ -1,7 +1,28 @@
 init {
     var, foo: string
     a, b, c, d: int
-    e, f: float
+    e, f, g: float
 }
 
-a = 1 + 5
+a = 1
+b = 1 + 4
+c = 2 * 5 + b
+d = a + c / 7
+
+e = -99999.99
+f = 99.
+g = .9999
+
+var = "@sdADaSjfla%dfg"
+var = "@sdADaSjfla%dfg"
+foo = var
+
+#+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
+#+ Esto es un comentario +#
+
+if (a > b)
+{
+    write("a es mayor que b")
+}
+
+read(a)

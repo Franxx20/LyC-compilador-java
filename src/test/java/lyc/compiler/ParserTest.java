@@ -15,7 +15,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static lyc.compiler.Constants.EXAMPLES_ROOT_DIRECTORY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-
 public class ParserTest {
 
     @Test
@@ -123,6 +122,4 @@ public class ParserTest {
         InputStream inputStream = new FileInputStream(EXAMPLES_ROOT_DIRECTORY + "%s".formatted(fileName));
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
     }
-
-
 }
