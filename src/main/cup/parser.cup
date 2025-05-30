@@ -1,10 +1,27 @@
 package lyc.compiler;
 
 import java_cup.runtime.*;
+import java.util.HashMap;
+import java.util.ArrayList;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.TripleManager;
 
 class Parser;
+
+
+parser code {:
+    private HashMap<String, String> cmp_map = new HashMap<String,String>();
+    private ArrayList<String> identifiers_list = new ArrayList<String>();
+:}
+
+init with {:
+     cmp_map.put("EQUAL","BNE");
+     cmp_map.put("NOT_EQUAL","BEQ");
+     cmp_map.put("LESS_EQUAL","BGT");
+     cmp_map.put("GREATER_EQUAL","BLT");
+     cmp_map.put("LESS","BGE");
+     cmp_map.put("GREATER","BLE");
+:}
 
 // Terminals
 
@@ -77,7 +94,7 @@ non terminal String comparator;
 
 non terminal list_declaration;
 non terminal var_list;
-non terminal var_type;
+non terminal String var_type;
 non terminal function;
 non terminal negative_function;
 non terminal reorder_function;
@@ -121,33 +138,65 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
                         :}
                         ;
 
-selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("selection = if (condition) { program }"); :} |
-                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("selection = if (condition) { program } else { program }"); :}
+selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {: System.out.println("selection = if (condition) { program }"); :} |
+                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {: System.out.println("selection = if (condition) { program } else { program }"); :}
                         ;
 
-iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET {: System.out.println("while (condition) { program }"); :};
+iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {: System.out.println("while (condition) { program }"); :}
+                        ;
 
-var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET {: System.out.println("init { list_declaration }"); :};
+var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET
+                        {: System.out.println("init { list_declaration }"); :}
+                        ;
 
-list_declaration    ::= list_declaration var_list COLON var_type {: System.out.println("list_declaration = list_declaration var_list : var_type"); :} |
-                        var_list COLON var_type {: System.out.println("list_declaration = var_list : var_type"); :}
+list_declaration    ::= list_declaration var_list COLON var_type:vt
+                        {:
+                            for(String id : identifiers_list) {
+                                SymbolTableGenerator.insertVariable(id, vt);
+                            }
+                            identifiers_list.clear();
+                            System.out.println("list_declaration = list_declaration var_list : var_type");
+                        :} |
+                        var_list COLON var_type:vt
+                        {:
+                            for(String id : identifiers_list) {
+                                SymbolTableGenerator.insertVariable(id, vt);
+                            }
+                            identifiers_list.clear();
+                            System.out.println("list_declaration = var_list : var_type");
+                        :}
                         ;
 
 var_list            ::= var_list COMMA IDENTIFIER:id
                         {:
+                            identifiers_list.add(id);
                             System.out.println("var_list = var_list , IDENTIFIER");
-                            SymbolTableGenerator.insertVariable(id.toString(), "id");
                         :} |
                         IDENTIFIER:id
                         {:
+                            identifiers_list.add(id);
                             System.out.println("var_list = IDENTIFIER");
-                            SymbolTableGenerator.insertVariable(id.toString(), "id");
                         :}
                         ;
 
-var_type            ::= TYPE_INT {: System.out.println("int"); :} |
-                        TYPE_FLOAT {: System.out.println("float"); :} |
-                        TYPE_STRING {: System.out.println("string"); :}
+var_type            ::= TYPE_INT
+                        {:
+                            RESULT = "int";
+                            System.out.println("int");
+                        :} |
+                        TYPE_FLOAT
+                        {:
+                            RESULT = "float";
+                            System.out.println("float");
+                        :} |
+                        TYPE_STRING
+                        {:
+                            RESULT = "string";
+                            System.out.println("string");
+                        :}
                         ;
 
 expression          ::= expression:e PLUS term:t
@@ -222,6 +271,7 @@ factor              ::= IDENTIFIER:id
 
 constant            ::= INTEGER_CONSTANT:i
                         {:
+                            // RESULT = SymbolTableGenerator.SymbolT(i, "int");
                             RESULT = i;
                         :} |
                         FLOAT_CONSTANT:f
@@ -230,41 +280,58 @@ constant            ::= INTEGER_CONSTANT:i
                         :}
                         ;
 
-condition           ::= comparation |
-                        NOT comparation |
-                        comparation OR comparation |
-                        comparation AND comparation
+condition           ::= comparation:cmp
+                        {:
+                            TripleManager.addTriple(cmp, "GOTO", null);
+                            System.out.println("condition = comparation");
+                        :} |
+                        NOT comparation:cmp {:
+                            System.out.println("condition = NOT comparation");
+                        :} |
+                        comparation:cmp OR comparation:cmp2 {:
+                            System.out.println("condition = comparation OR comparation");
+                        :} |
+                        comparation:cmp AND comparation:cmp2 {:
+                            System.out.println("condition = comparation AND comparation");
+                        :}
                         ;
 
 comparation         ::= expression:e1 comparator:cmp expression:e2
                         {:
+                            TripleManager.addTriple("CMP", "[" + e1 + "]", "[" + e2 + "]");
+                            RESULT = cmp;
                             System.out.println("comparation = expression comparator expression");
                         :};
 
 comparator          ::= EQUAL
                         {:
-
+                            RESULT = cmp_map.get("EQUAL");
                             System.out.println("==");
                         :} |
                         NOT_EQUAL
                         {:
+                            RESULT = cmp_map.get("NOT_EQUAL");
                             System.out.println("!=");
                         :} |
                         LESS_EQUAL
                         {:
-                             System.out.println("<=");
+                            RESULT = cmp_map.get("LESS_EQUAL");
+                            System.out.println("<=");
                         :} |
                         GREATER_EQUAL
                         {:
+                            RESULT = cmp_map.get("GREATER_EQUAL");
                             System.out.println(">=");
                         :} |
                         LESS
                         {:
+                            RESULT = cmp_map.get("LESS");
                             System.out.println("<");
                         :} |
                         GREATER
                         {:
-                          System.out.println(">");
+                            RESULT = cmp_map.get("GREATER");
+                            System.out.println(">");
                         :}
                         ;
 
@@ -325,3 +392,5 @@ float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
                         SUB IDENTIFIER:id  {: RESULT = id; :} |
                         SUB FLOAT_CONSTANT:f {: RESULT = f; :}
                         ;
+
+
