@@ -56,6 +56,4 @@ var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
 foo = var
 #+ Esto es un comentario +#
 
-reorder([x+3, 1+1, 9-x],1,2)
-
 x = negativeCalculation(-4.0, 2.3, c, 5.6)
