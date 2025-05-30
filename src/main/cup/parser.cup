@@ -3,6 +3,7 @@ package lyc.compiler;
 import java_cup.runtime.*;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Stack;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.TripleManager;
 
@@ -12,6 +13,8 @@ class Parser;
 parser code {:
     private HashMap<String, String> cmp_map = new HashMap<String,String>();
     private ArrayList<String> identifiers_list = new ArrayList<String>();
+    private Stack<Integer> jumpStack = new Stack<>();
+    public int cte_idx, factor_idx, term_idx, exp_idx, exp_idx_aux;
 :}
 
 init with {:
@@ -83,10 +86,10 @@ non terminal selection;
 non terminal sentence;
 non terminal assignment;
 
-non terminal String expression;
-non terminal String term;
-non terminal String factor;
-non terminal String constant;
+non terminal SymbolTableGenerator.SymbolT expression;
+non terminal SymbolTableGenerator.SymbolT term;
+non terminal SymbolTableGenerator.SymbolT factor;
+non terminal SymbolTableGenerator.SymbolT constant;
 
 non terminal String condition;
 non terminal String comparation;
@@ -124,22 +127,38 @@ sentence            ::= assignment {: System.out.println("sentence = assignment"
 
 assignment          ::= IDENTIFIER:id ASSIG expression:e
                         {:
-                            TripleManager.addTriple("=",id,"[" + e + "]");
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null && e != null) {
+                                if(sym.getType() == e.getType()) {
+                                    TripleManager.addTriple("=", id, "[" + exp_idx + "]");
+                                } else {
+                                    System.out.println("No se le puede asignar a una variable de tipo: "
+                                    + sym.getType() + "un tipo de dato: " + e.getType());
+                                }
+                            } else {
+                                 System.out.println("Variable: " + id + " is not defined.");
+                            }
+
                             System.out.println("assignment = id = expression");
                         :} |
                         IDENTIFIER ASSIG negative_function
                         {:
-                            System.out.println("assignment = id=negative_function");
+                            System.out.println("assignment = id = negative_function");
                         :} |
                         IDENTIFIER:id ASSIG STRING_CONSTANT:sc
                         {:
-                            TripleManager.addTriple("=",id,sc);
-                            System.out.println("assignment = id=string_constant");
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol("_"+sc);
+                            TripleManager.addTriple("=",id,sym.getName());
+                            System.out.println("assignment = id = string_constant");
                         :}
                         ;
 
 selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {: System.out.println("selection = if (condition) { program }"); :} |
+                        {:
+                            int idx = jumpStack.pop();
+                            TripleManager.patchTriple(idx, TripleManager.getLastIndex() + 1);
+                            System.out.println("selection = if (condition) { program }");
+                        :} |
                         IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
                         {: System.out.println("selection = if (condition) { program } else { program }"); :}
                         ;
@@ -201,18 +220,33 @@ var_type            ::= TYPE_INT
 
 expression          ::= expression:e PLUS term:t
                         {:
-                            int index = TripleManager.addTriple("+","[" + e + "]", "[" + t + "]");
-                            RESULT = Integer.toString(index);
+                            if(e != null && t != null) {
+                                if(e.getType() == t.getType()) {
+                                    exp_idx = TripleManager.addTriple("+", "[" + exp_idx + "]", "[" + term_idx + "]");
+                                } else {
+                                    System.out.println("No se puede sumar un " + e.getType() +
+                                    " con un " + t.getType());
+                                }
+                            }
+                            RESULT = t;
                             System.out.println("+");
                         :} |
                         expression:e SUB term:t
                         {:
-                            int index = TripleManager.addTriple("-","[" + e + "]", "[" + t + "]");
-                            RESULT = Integer.toString(index);
+                            if(e != null && t != null) {
+                                if(e.getType() == t.getType()) {
+                                    exp_idx = TripleManager.addTriple("-", "[" + exp_idx + "]", "[" + term_idx + "]");
+                                } else {
+                                    System.out.println("No se puede restar un " + e.getType() +
+                                    " con un " + t.getType());
+                                }
+                            }
+                            RESULT = t;
                             System.out.println("-");
                         :} |
                         term:t
                         {:
+                            exp_idx = term_idx;
                             RESULT = t;
                             System.out.println("Expression = Term");
                         :}
@@ -220,18 +254,33 @@ expression          ::= expression:e PLUS term:t
 
 term                ::= term:t MULT factor:f
                         {:
-                            int index = TripleManager.addTriple("*", "[" + t + "]", "[" + f + "]");
-                            RESULT = Integer.toString(index);
+                            if(t != null && f != null) {
+                                if(t.getType() == f.getType()) {
+                                    term_idx = TripleManager.addTriple("*", "[" + term_idx + "]", "[" + factor_idx + "]");
+                                } else {
+                                    System.out.println("No se puede multiplicar un " + t.getType() +
+                                    " con un " + f.getType());
+                                }
+                            }
+                            RESULT = f;
                             System.out.println("*");
                         :} |
                         term:t DIV factor:f
                         {:
-                            int index = TripleManager.addTriple("/","[" + t + "]", "[" + f + "]");
-                            RESULT = Integer.toString(index);
+                            if(t != null && f != null) {
+                                if(t.getType() == f.getType()) {
+                                    term_idx = TripleManager.addTriple("/","[" + term_idx + "]", "[" + factor_idx + "]");
+                                } else {
+                                    System.out.println("No se puede dividir un " + t.getType() +
+                                    " con un " + f.getType());
+                                }
+                            }
+                            RESULT = f;
                             System.out.println("/");
                         :} |
                         factor:f
                         {:
+                            term_idx = factor_idx;
                             RESULT = f;
                             System.out.println("Term = factor");
                         :}
@@ -239,31 +288,42 @@ term                ::= term:t MULT factor:f
 
 factor              ::= IDENTIFIER:id
                         {:
-                            int index = TripleManager.addTriple(id,null,null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Id: " + id);
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                factor_idx = TripleManager.addTriple(id,null,null);
+                                RESULT = sym;
+                                System.out.println("Id: " + sym.getName());
+                            } else {
+                                System.out.println("variable: " + id + " is not defined" );
+                            }
                         :} |
                         SUB IDENTIFIER:id
                         {:
-                            int index = TripleManager.addTriple("-",id,null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Id: " + id);
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                factor_idx = TripleManager.addTriple("-",id,null);
+                                RESULT = sym;
+                                System.out.println("Id: " + sym.getName());
+                            } else {
+                                System.out.println("variable: " + id + " is not defined" );
+                            }
                         :}
                         |
                         constant:cte
                         {:
-                            int index = TripleManager.addTriple(cte, null, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Constant: " + cte);
+                            factor_idx = TripleManager.addTriple(cte.getName(), null, null);
+                            RESULT = cte;
+                            System.out.println("Constant: " + cte.getName());
                         :} |
                         SUB constant:cte
                         {:
-                            int index = TripleManager.addTriple("-", cte, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Constant: " + cte);
+                            factor_idx = TripleManager.addTriple("-", cte.getName(), null);
+                            RESULT = cte;
+                            System.out.println("Constant: " + cte.getName());
                         :} |
                         OPEN_BRACKET expression:e CLOSE_BRACKET
                         {:
+                            factor_idx = exp_idx;
                             RESULT = e;
                             System.out.println("Factor = (Expression)");
                         :}
@@ -271,18 +331,18 @@ factor              ::= IDENTIFIER:id
 
 constant            ::= INTEGER_CONSTANT:i
                         {:
-                            // RESULT = SymbolTableGenerator.SymbolT(i, "int");
-                            RESULT = i;
+                            RESULT = SymbolTableGenerator.getSymbol("_"+i);
                         :} |
                         FLOAT_CONSTANT:f
                         {:
-                            RESULT = f;
+                            RESULT = SymbolTableGenerator.getSymbol("_"+f);
                         :}
                         ;
 
 condition           ::= comparation:cmp
                         {:
-                            TripleManager.addTriple(cmp, "GOTO", null);
+                            int idx = TripleManager.addTriple(cmp, "GOTO", null);
+                            jumpStack.push(idx);
                             System.out.println("condition = comparation");
                         :} |
                         NOT comparation:cmp {:
@@ -296,9 +356,16 @@ condition           ::= comparation:cmp
                         :}
                         ;
 
-comparation         ::= expression:e1 comparator:cmp expression:e2
+comparation         ::= expression:e1 {: exp_idx_aux = exp_idx; :} comparator:cmp expression:e2
                         {:
-                            TripleManager.addTriple("CMP", "[" + e1 + "]", "[" + e2 + "]");
+                            if(e1 != null && e2 != null) {
+                                if(e1.getType() == e2.getType()) {
+                                    TripleManager.addTriple("CMP", "[" + exp_idx_aux + "]", "[" + exp_idx + "]");
+                                } else {
+                                    System.out.println("No se puede comparar un tipo de dato: " + e1.getType()
+                                    + " con un tipo de dato: " + e2.getType());
+                                }
+                            }
                             RESULT = cmp;
                             System.out.println("comparation = expression comparator expression");
                         :};
@@ -341,31 +408,41 @@ function            ::= reorder_function
                         :} |
                         READ OPEN_BRACKET IDENTIFIER:id CLOSE_BRACKET
                         {:
-                            int index = TripleManager.addTriple("READ", id, null);
-                            RESULT = Integer.toString(index);
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                 TripleManager.addTriple("READ", id, null);
+                            } else {
+                                System.out.println("variable: " + id + " is not defined" );
+                            }
                             System.out.println("function = read ( IDENTIFIER )");
                         :} |
                         WRITE OPEN_BRACKET write_args:wa CLOSE_BRACKET
                         {:
                             int index = TripleManager.addTriple("WRITE", wa, null);
-                            RESULT = Integer.toString(index);
                             System.out.println("function = write ( write_args )");
                         :}
                         ;
 
 write_args          ::= IDENTIFIER:id
                         {:
-                            RESULT = id;
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                 RESULT = id;
+                            } else {
+                                System.out.println("variable: " + id + " is not defined" );
+                            }
                             System.out.println("write_args = IDENTIFIER");
                         :} |
                         STRING_CONSTANT:sc
                         {:
-                            RESULT = sc;
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol("_"+sc);
+                            RESULT = sym.getName();
                             System.out.println("write_args = string_constant");
                         :} |
                         constant:cte
                         {:
-                            RESULT = cte;
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol("_"+cte);
+                            RESULT = sym.getName();
                             System.out.println("write_args = constant");
                         :}
                         ;
@@ -392,5 +469,3 @@ float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
                         SUB IDENTIFIER:id  {: RESULT = id; :} |
                         SUB FLOAT_CONSTANT:f {: RESULT = f; :}
                         ;
-
-
