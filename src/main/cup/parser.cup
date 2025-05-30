@@ -142,8 +142,9 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
 
                             System.out.println("assignment = id = expression");
                         :} |
-                        IDENTIFIER ASSIG negative_function
+                        IDENTIFIER:id ASSIG negative_function:nf
                         {:
+                            TripleManager.addTriple("=",id,"[" + nf + "]");
                             System.out.println("assignment = id = negative_function");
                         :} |
                         IDENTIFIER:id ASSIG STRING_CONSTANT:sc
@@ -561,15 +562,15 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CL
                             TripleManager.addTriple("CMP", "@count", 0);
                             int falseIdx = TripleManager.addTriple("BNE", "J", 0);
 
-                            TripleManager.addTriple(":=", "@total", "@sum");
+                            TripleManager.addTriple("=", "@total", "@sum");
                             int biIdx = TripleManager.addTriple("BI", "J", 0);
 
-                            TripleManager.addTriple(":=", "@total", "@mult");
+                            TripleManager.addTriple("=", "@total", "@mult");
 
                             TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex());
                             TripleManager.patchTriple(biIdx, TripleManager.getLastIndex()+1);
 
-                            int xIdx = TripleManager.addTriple(":=", "@x", "@total");
+                            int xIdx = TripleManager.addTriple("=", "@x", "@total");
 
                             RESULT = Integer.toString(xIdx);
 
@@ -582,9 +583,9 @@ reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {
 
 float_list          ::= float_element:f
                         {:
-                            TripleManager.addTriple(":=", "@count", 0);
-                            TripleManager.addTriple(":=", "@sum", 0);
-                            TripleManager.addTriple(":=", "@mult", 0);
+                            TripleManager.addTriple("=", "@count", 0);
+                            TripleManager.addTriple("=", "@sum", 0);
+                            TripleManager.addTriple("=", "@mult", 0);
 
                             // if (f < 0)
                             //	 if (@count == 0)
@@ -601,19 +602,19 @@ float_list          ::= float_element:f
                             TripleManager.addTriple("CMP", "@count", 0);
                             int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", 0);
 
-                            TripleManager.addTriple(":=", "@parBit", 1);
+                            TripleManager.addTriple("=", "@parBit", 1);
                             int biIdx = TripleManager.addTriple("BI", "GOTO", 0);
 
-                            TripleManager.addTriple(":=", "@parBit", 0);
+                            TripleManager.addTriple("=", "@parBit", 0);
 
                             TripleManager.patchTriple(falseIdx2, TripleManager.getLastIndex());
                             TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
 
-                            int countIdx = TripleManager.addTriple(":=", "@count", "@parBit");
+                            int countIdx = TripleManager.addTriple("=", "@count", "@parBit");
                             TripleManager.addTriple("+", "@sum", f);
-                            int sumIdx = TripleManager.addTriple(":=", "@sum", TripleManager.getLastIndex());
+                            int sumIdx = TripleManager.addTriple("=", "@sum", TripleManager.getLastIndex());
                             TripleManager.addTriple("*", "@mult", f);
-                            int multIdx = TripleManager.addTriple(":=", "@mult", TripleManager.getLastIndex());
+                            int multIdx = TripleManager.addTriple("=", "@mult", TripleManager.getLastIndex());
 
                             TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
 
@@ -643,19 +644,19 @@ float_list          ::= float_element:f
                             TripleManager.addTriple("CMP", "@count", 0);
                             int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", 0);
 
-                            TripleManager.addTriple(":=", "@parBit", 1);
+                            TripleManager.addTriple("=", "@parBit", 1);
                             int biIdx = TripleManager.addTriple("BI", "GOTO", 0);
 
-                            TripleManager.addTriple(":=", "@parBit", 0);
+                            TripleManager.addTriple("=", "@parBit", 0);
 
                             TripleManager.patchTriple(falseIdx2, TripleManager.getLastIndex());
                             TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
 
-                            int countIdx = TripleManager.addTriple(":=", "@count", "@parBit");
+                            int countIdx = TripleManager.addTriple("=", "@count", "@parBit");
                             TripleManager.addTriple("+", "@sum", f);
-                            int sumIdx = TripleManager.addTriple(":=", "@sum", TripleManager.getLastIndex());
+                            int sumIdx = TripleManager.addTriple("=", "@sum", TripleManager.getLastIndex());
                             TripleManager.addTriple("*", "@mult", f);
-                            int multIdx = TripleManager.addTriple(":=", "@mult", TripleManager.getLastIndex());
+                            int multIdx = TripleManager.addTriple("=", "@mult", TripleManager.getLastIndex());
 
                             TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
 
