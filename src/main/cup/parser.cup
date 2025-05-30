@@ -14,6 +14,7 @@ parser code {:
     private HashMap<String, String> cmp_map = new HashMap<String,String>();
     private ArrayList<String> identifiers_list = new ArrayList<String>();
     private Stack<Integer> jumpStack = new Stack<>();
+    private Stack<Integer> negStack = new Stack<>();
     public int cte_idx, factor_idx, term_idx, exp_idx, exp_idx_aux;
 :}
 
@@ -155,17 +156,48 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
 
 selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
                         {:
-                            int idx = jumpStack.pop();
-                            TripleManager.patchTriple(idx, TripleManager.getLastIndex() + 1);
+                            // Si fue falso salta al final del programa
+                            int falseIdx = jumpStack.pop();
+                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 1);
                             System.out.println("selection = if (condition) { program }");
                         :} |
-                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {: System.out.println("selection = if (condition) { program } else { program }"); :}
+                        IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {:
+                            // Si fue falso salta al else
+                            int falseIdx = jumpStack.pop();
+                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 2);
+
+                            // Si fue verdadero se evita el else
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
+                            jumpStack.push(biIdx);
+                        :}
+                        ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {:
+                            // Se hace ese salto sobre el else
+                            int biIdx = jumpStack.pop();
+                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
+                            System.out.println("selection = if (condition) { program } else { program }");
+                        :}
                         ;
 
-iteration           ::= WHILE OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
-                        {: System.out.println("while (condition) { program }"); :}
-                        ;
+iteration           ::= WHILE OPEN_BRACKET
+                        {:
+                            // Etiqueta al inicio para iterar
+                            int etIdx = TripleManager.addTriple("ET", "WHILE", null);
+                            jumpStack.push(etIdx);                        :}
+                        condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
+                        {:
+                            // Si la condición es falsa sale del while
+                            int falseIdx = jumpStack.pop();
+                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 2);
+
+                            // Bifurcación al inicio para evaluar de nuevo la condicion
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
+                            int etIdx = jumpStack.pop();
+                            TripleManager.patchTriple(biIdx, etIdx);
+
+                            System.out.println("while (condition) { program }");
+                        :};
 
 var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET
                         {: System.out.println("init { list_declaration }"); :}
@@ -339,19 +371,80 @@ constant            ::= INTEGER_CONSTANT:i
                         :}
                         ;
 
+// Cuando se pase por esta regla, siempre se saldrá de acá con un sólo índice apilado, el que corresponda al salto por falso
 condition           ::= comparation:cmp
                         {:
-                            int idx = TripleManager.addTriple(cmp, "GOTO", null);
-                            jumpStack.push(idx);
+                            int falseIdx = TripleManager.addTriple(cmp, "GOTO", null);
+                            // Se apila para hacer el salto por caso falso
+                            jumpStack.push(falseIdx);
                             System.out.println("condition = comparation");
                         :} |
                         NOT comparation:cmp {:
+                            int falseIdx = TripleManager.addTriple(cmp, "GOTO", null);
+
+                            // Bifurcación para salir por caso falso (o sea verdadero)
+                            int trueIdx = TripleManager.addTriple("BI", "GOTO", null);
+                            jumpStack.push(trueIdx);
+
+                            // Si fue verdadero (o sea falso) hace un saltito sobre la bifurcación
+                            TripleManager.patchTriple(falseIdx, trueIdx + 1);
+
+                            int etIdx = TripleManager.addTriple("ET", "NOT", null); // es solo la etiqueta
                             System.out.println("condition = NOT comparation");
                         :} |
-                        comparation:cmp OR comparation:cmp2 {:
+                        comparation:cmp
+                        {:
+                            int falseIdx1 = TripleManager.addTriple(cmp, "GOTO", null);
+
+                            int trueIdx = TripleManager.addTriple("BI", "GOTO", null);
+                            // Si fue verdadera se apila para despues salar a la parte verdadera
+                            jumpStack.push(trueIdx);
+
+                            int etIdx = TripleManager.addTriple("ET", "OR", null); // es solo la etiqueta
+
+                            TripleManager.patchTriple(falseIdx1, etIdx);
+                            // Si la primera comparacion fue falsa, hace un pequeño salto sobre el BI por verdadera                        :}
+                        OR comparation:cmp2
+                        {:
+                            // Desapilamos ese index de recien para hacer el salto por verdadera
+                            int trueIdx = jumpStack.pop();
+
+                            int falseIdx2 = TripleManager.addTriple(cmp2, "GOTO", null);
+                            // Se apila para hacer el salto por caso falso, porque ambas dieron falsas
+                            jumpStack.push(falseIdx2);
+                            // Hacemos el salto por verdadera
+                            TripleManager.patchTriple(trueIdx, falseIdx2 + 1);
+
                             System.out.println("condition = comparation OR comparation");
                         :} |
-                        comparation:cmp AND comparation:cmp2 {:
+                        comparation:cmp
+                        {:
+                            int falseIdx1 = TripleManager.addTriple(cmp, "GOTO", null);
+                            // Si la primera ya es falsa, va a salir por falso
+                            jumpStack.push(falseIdx1);
+
+                            int etIdx = TripleManager.addTriple("ET", "AND", null); // es solo la etiqueta
+                         :}
+                         AND comparation:cmp2
+                         {:
+                            int falseIdx2 = TripleManager.addTriple(cmp2, "GOTO", null);
+                            // Si la segunda es falsa, tambien va a salir por falso
+
+                            int trueIndx = TripleManager.addTriple("BI", "GOTO", null);
+                            // Si ambas son verdaderas, quiero hacer un pequeño salto sobre los tercetos que vienen ahora (hacia index5 + 1)
+
+                            // Ambos indices del salto por falso saltan a la misma lazy
+                            int lazyIdx = TripleManager.addTriple("ET", "LAZY_AND", null);
+                            TripleManager.patchTriple(falseIdx2, lazyIdx);
+                            int falseIdx1 = jumpStack.pop();
+                            TripleManager.patchTriple(falseIdx1, lazyIdx);
+
+                            // Despues de que los dos salten a la lazy, se apila la bifurcacion por falso
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
+                            jumpStack.push(biIdx);
+
+                             // Hago ese saltito
+                            TripleManager.patchTriple(trueIndx, biIdx + 1);
                             System.out.println("condition = comparation AND comparation");
                         :}
                         ;
@@ -454,14 +547,123 @@ arguments_list      ::= arguments_list COMMA expression {: System.out.println("a
                         expression {: System.out.println("arguments_list = expression"); :}
                         ;
 
-negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET {: System.out.println("negative_function = negativeCalculation ( float_list )"); :}
+negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET
+                        {:
+                            int multIdx = negStack.pop();
+                            int sumIdx = negStack.pop();
+                            int countIdx = negStack.pop();
+
+                            // if (@count == 0)
+                            //  x = @sum
+                            //  else
+                            //	x = @mult
+
+                            TripleManager.addTriple("CMP", "@count", 0);
+                            int falseIdx = TripleManager.addTriple("BNE", "J", 0);
+
+                            TripleManager.addTriple(":=", "@total", "@sum");
+                            int biIdx = TripleManager.addTriple("BI", "J", 0);
+
+                            TripleManager.addTriple(":=", "@total", "@mult");
+
+                            TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex());
+                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex()+1);
+
+                            int xIdx = TripleManager.addTriple(":=", "@x", "@total");
+
+                            RESULT = Integer.toString(xIdx);
+
+                            System.out.println("negative_function = negativeCalculation ( float_list )");                            System.out.println("negative_function = negativeCalculation ( float_list )");
+                        :}
                         ;
 
 reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder_function = reorder ( arguments )"); :}
                         ;
 
-float_list          ::= float_element:f {: System.out.println("float_list =" + f); :} |
-                        float_list COMMA float_element {: System.out.println("float_list , float_element"); :}
+float_list          ::= float_element:f
+                        {:
+                            TripleManager.addTriple(":=", "@count", 0);
+                            TripleManager.addTriple(":=", "@sum", 0);
+                            TripleManager.addTriple(":=", "@mult", 0);
+
+                            // if (f < 0)
+                            //	 if (@count == 0)
+                            //		 @parBit = 1
+                            //	 else
+                            //		 @parBit = 0
+                            //	 @count = @parBit
+                            //   @sum = @sum + f
+                            //	 @mult = @mult * f
+
+                            TripleManager.addTriple("CMP", f, 0);
+                            int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", 0);
+
+                            TripleManager.addTriple("CMP", "@count", 0);
+                            int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", 0);
+
+                            TripleManager.addTriple(":=", "@parBit", 1);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", 0);
+
+                            TripleManager.addTriple(":=", "@parBit", 0);
+
+                            TripleManager.patchTriple(falseIdx2, TripleManager.getLastIndex());
+                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
+
+                            int countIdx = TripleManager.addTriple(":=", "@count", "@parBit");
+                            TripleManager.addTriple("+", "@sum", f);
+                            int sumIdx = TripleManager.addTriple(":=", "@sum", TripleManager.getLastIndex());
+                            TripleManager.addTriple("*", "@mult", f);
+                            int multIdx = TripleManager.addTriple(":=", "@mult", TripleManager.getLastIndex());
+
+                            TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
+
+                            negStack.push(countIdx);
+                            negStack.push(sumIdx);
+                            negStack.push(multIdx);
+                            System.out.println("float_list =" + f);
+                        :} |
+                        float_list COMMA float_element:f
+                        {:
+                            negStack.pop();
+                            negStack.pop();
+                            negStack.pop();
+
+                            // if (f < 0)
+                            //	 if (@count == 0)
+                            //		 @parBit = 1
+                            //	 else
+                            //		 @parBit = 0
+                            //	 @count = @parBit
+                            //   @sum = @sum + f
+                            //	 @mult = @mult * f
+
+                            TripleManager.addTriple("CMP", f, 0);
+                            int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", 0);
+
+                            TripleManager.addTriple("CMP", "@count", 0);
+                            int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", 0);
+
+                            TripleManager.addTriple(":=", "@parBit", 1);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", 0);
+
+                            TripleManager.addTriple(":=", "@parBit", 0);
+
+                            TripleManager.patchTriple(falseIdx2, TripleManager.getLastIndex());
+                            TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
+
+                            int countIdx = TripleManager.addTriple(":=", "@count", "@parBit");
+                            TripleManager.addTriple("+", "@sum", f);
+                            int sumIdx = TripleManager.addTriple(":=", "@sum", TripleManager.getLastIndex());
+                            TripleManager.addTriple("*", "@mult", f);
+                            int multIdx = TripleManager.addTriple(":=", "@mult", TripleManager.getLastIndex());
+
+                            TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
+
+                            negStack.push(countIdx);
+                            negStack.push(sumIdx);
+                            negStack.push(multIdx);
+                            System.out.println("float_list , float_element");
+                        :}
                         ;
 
 float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
