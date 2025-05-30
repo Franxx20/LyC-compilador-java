@@ -141,8 +141,6 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
 
   /* identifiers */
   {Identifier}                              {
-                                                String value = yytext();
-                                                SymbolTableGenerator.insertVariable(value, "id");
                                                 return symbol(ParserSym.IDENTIFIER, yytext());
                                             }
 
