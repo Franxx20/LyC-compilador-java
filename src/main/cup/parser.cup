@@ -185,7 +185,8 @@ iteration           ::= WHILE OPEN_BRACKET
                         {:
                             // Etiqueta al inicio para iterar
                             int etIdx = TripleManager.addTriple("ET", "WHILE", null);
-                            jumpStack.push(etIdx);                        :}
+                            jumpStack.push(etIdx);
+                        :}
                         condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
                         {:
                             // Si la condición es falsa sale del while
@@ -404,7 +405,8 @@ condition           ::= comparation:cmp
                             int etIdx = TripleManager.addTriple("ET", "OR", null); // es solo la etiqueta
 
                             TripleManager.patchTriple(falseIdx1, etIdx);
-                            // Si la primera comparacion fue falsa, hace un pequeño salto sobre el BI por verdadera                        :}
+                            // Si la primera comparacion fue falsa, hace un pequeño salto sobre el BI por verdadera
+                        :}
                         OR comparation:cmp2
                         {:
                             // Desapilamos ese index de recien para hacer el salto por verdadera
@@ -425,9 +427,9 @@ condition           ::= comparation:cmp
                             jumpStack.push(falseIdx1);
 
                             int etIdx = TripleManager.addTriple("ET", "AND", null); // es solo la etiqueta
-                         :}
-                         AND comparation:cmp2
-                         {:
+                        :}
+                        AND comparation:cmp2
+                        {:
                             int falseIdx2 = TripleManager.addTriple(cmp2, "GOTO", null);
                             // Si la segunda es falsa, tambien va a salir por falso
 
@@ -541,7 +543,8 @@ write_args          ::= IDENTIFIER:id
                         :}
                         ;
 
-arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT {: System.out.println("arguments = [arguments_list], integer_constant, integer_constant"); :}
+arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT
+                        {: System.out.println("arguments = [arguments_list], integer_constant, integer_constant"); :}
                         ;
 
 arguments_list      ::= arguments_list COMMA expression {: System.out.println("arguments_list = arguments_list , expression"); :} |
@@ -574,11 +577,12 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CL
 
                             RESULT = Integer.toString(xIdx);
 
-                            System.out.println("negative_function = negativeCalculation ( float_list )");                            System.out.println("negative_function = negativeCalculation ( float_list )");
+                            System.out.println("negative_function = negativeCalculation ( float_list )");
                         :}
                         ;
 
-reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder_function = reorder ( arguments )"); :}
+reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET
+                        {: System.out.println("reorder_function = reorder ( arguments )"); :}
                         ;
 
 float_list          ::= float_element:f
