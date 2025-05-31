@@ -3,6 +3,7 @@ package lyc.compiler;
 import java_cup.runtime.*;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.TripleManager;
@@ -15,7 +16,8 @@ parser code {:
     private ArrayList<String> identifiers_list = new ArrayList<String>();
     private Stack<Integer> jumpStack = new Stack<>();
     private Stack<Integer> negStack = new Stack<>();
-    public int cte_idx, factor_idx, term_idx, exp_idx, exp_idx_aux;
+    private ArrayList<String> reorderList = new ArrayList();
+    private int cte_idx, factor_idx, term_idx, exp_idx, exp_idx_aux;
 :}
 
 init with {:
@@ -543,12 +545,82 @@ write_args          ::= IDENTIFIER:id
                         :}
                         ;
 
-arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT
-                        {: System.out.println("arguments = [arguments_list], integer_constant, integer_constant"); :}
+reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET
+                        {:
+                            TripleManager.addTriple("ET", "REORDER_BEGIN", null);
+                        :}
+                        arguments CLOSE_BRACKET
+                        {:
+                            TripleManager.addTriple("ET", "REORDER_END", null);
+                            System.out.println("reorder_function = reorder ( arguments )");
+                        :}
                         ;
 
-arguments_list      ::= arguments_list COMMA expression {: System.out.println("arguments_list = arguments_list , expression"); :} |
-                        expression {: System.out.println("arguments_list = expression"); :}
+arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT:dir COMMA INTEGER_CONSTANT:pos
+                        {:
+                            TripleManager.addTriple("ET", "REORDER_PROCESSING", null);
+                            int pivot = Integer.parseInt(pos);
+                            int direction = Integer.parseInt(dir);
+
+                            if (pivot < 0 || pivot >= reorderList.size()) {
+                                System.err.println("Error: El pivote " + pivot + " está fuera del rango válido.");
+                                throw new Exception("Pivote fuera de rango");
+                            }
+
+                            List<String> resultList = new ArrayList<>();
+
+                            if (direction == 0) {
+                                // Reordenar derecha del pivote (índices pivot+1 en adelante)
+                                if (pivot >= reorderList.size() - 1) {
+                                    resultList.addAll(reorderList); // nada a reordenar
+                                } else {
+                                    for (int i = 0; i < pivot; i++) {
+                                        resultList.add(reorderList.get(i));
+                                    }
+                                    for (int i = reorderList.size() - 1; i >= pivot; i--) {
+                                        resultList.add(reorderList.get(i));
+                                    }
+                                }
+                            } else if (direction == 1) {
+                                // Reordenar izquierda del pivote (índices 0 a pivot-1)
+                                if (pivot == 0) {
+                                    resultList.addAll(reorderList); // nada a reordenar
+                                } else {
+                                    for (int i = pivot; i >= 0; i--) {
+                                        resultList.add(reorderList.get(i));
+                                    }
+                                    for (int i = pivot+1; i < reorderList.size(); i++) {
+                                        resultList.add(reorderList.get(i));
+                                    }
+                                }
+                            } else {
+                                System.err.println("Error: Dirección inválida (debe ser 0 o 1)");
+                                throw new Exception("Dirección inválida");
+                            }
+
+                            // Generar triples
+                            String firstElem = resultList.remove(0);
+                            int elemIdx = TripleManager.addTriple("[" + firstElem + "]", null, null);
+
+                            for (String elem : resultList) {
+                                elemIdx = TripleManager.addTriple(",", "[" + elem + "]", "[" + elemIdx + "]");
+                            }
+
+                            reorderList.clear();
+                            System.out.println("arguments = [arguments_list], integer_constant, integer_constant");
+                        :}
+                        ;
+
+arguments_list      ::= arguments_list COMMA expression
+                        {:
+                            reorderList.add(Integer.toString(exp_idx));
+                            System.out.println("arguments_list = arguments_list , expression");
+                        :} |
+                        expression
+                        {:
+                            reorderList.add(Integer.toString(exp_idx));
+                            System.out.println("arguments_list = expression");
+                        :}
                         ;
 
 negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET
@@ -563,10 +635,10 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CL
                             //	x = @mult
 
                             TripleManager.addTriple("CMP", "@count", 0);
-                            int falseIdx = TripleManager.addTriple("BNE", "J", 0);
+                            int falseIdx = TripleManager.addTriple("BNE", "GOTO", null);
 
                             TripleManager.addTriple("=", "@total", "@sum");
-                            int biIdx = TripleManager.addTriple("BI", "J", 0);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
                             TripleManager.addTriple("=", "@total", "@mult");
 
@@ -581,9 +653,6 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CL
                         :}
                         ;
 
-reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET
-                        {: System.out.println("reorder_function = reorder ( arguments )"); :}
-                        ;
 
 float_list          ::= float_element:f
                         {:
@@ -601,13 +670,13 @@ float_list          ::= float_element:f
                             //	 @mult = @mult * f
 
                             TripleManager.addTriple("CMP", f, 0);
-                            int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", 0);
+                            int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", null);
 
                             TripleManager.addTriple("CMP", "@count", 0);
-                            int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", 0);
+                            int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", null);
 
                             TripleManager.addTriple("=", "@parBit", 1);
-                            int biIdx = TripleManager.addTriple("BI", "GOTO", 0);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
                             TripleManager.addTriple("=", "@parBit", 0);
 
@@ -616,9 +685,9 @@ float_list          ::= float_element:f
 
                             int countIdx = TripleManager.addTriple("=", "@count", "@parBit");
                             TripleManager.addTriple("+", "@sum", f);
-                            int sumIdx = TripleManager.addTriple("=", "@sum", TripleManager.getLastIndex());
+                            int sumIdx = TripleManager.addTriple("=", "@sum", "[" + TripleManager.getLastIndex() + "]");
                             TripleManager.addTriple("*", "@mult", f);
-                            int multIdx = TripleManager.addTriple("=", "@mult", TripleManager.getLastIndex());
+                            int multIdx = TripleManager.addTriple("=", "@mult", "[" + TripleManager.getLastIndex() + "]");
 
                             TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
 
@@ -643,13 +712,13 @@ float_list          ::= float_element:f
                             //	 @mult = @mult * f
 
                             TripleManager.addTriple("CMP", f, 0);
-                            int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", 0);
+                            int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", null);
 
                             TripleManager.addTriple("CMP", "@count", 0);
-                            int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", 0);
+                            int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", null);
 
                             TripleManager.addTriple("=", "@parBit", 1);
-                            int biIdx = TripleManager.addTriple("BI", "GOTO", 0);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
                             TripleManager.addTriple("=", "@parBit", 0);
 
@@ -658,9 +727,9 @@ float_list          ::= float_element:f
 
                             int countIdx = TripleManager.addTriple("=", "@count", "@parBit");
                             TripleManager.addTriple("+", "@sum", f);
-                            int sumIdx = TripleManager.addTriple("=", "@sum", TripleManager.getLastIndex());
+                            int sumIdx = TripleManager.addTriple("=", "@sum", "[" + TripleManager.getLastIndex() + "]");
                             TripleManager.addTriple("*", "@mult", f);
-                            int multIdx = TripleManager.addTriple("=", "@mult", TripleManager.getLastIndex());
+                            int multIdx = TripleManager.addTriple("=", "@mult", "[" + TripleManager.getLastIndex() + "]");
 
                             TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
 
