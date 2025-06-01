@@ -60,3 +60,14 @@ reorder([a+3, 1+1, 9-b],1,2)
 reorder([a*b-2, c+3, 1+1, 9-d],0,2)
 
 x = negativeCalculation(-4.0, 2.3, c, 5.6)
+
+#+ error semantico +#
+#+ variable a duplicada, ya ha sido declarada con anterioridad. +#
+#+ init { +#
+#+    a: int +#
+#+ } +#
+
+#+ error semantico +#
+#+ error el tipo de la variable a no corresponde con el tipo de la expresion asignada +#
+#+ a = 3.9 +#
+#+ a = "string" +#

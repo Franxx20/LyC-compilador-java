@@ -1,62 +1,14 @@
-init {
-    var, foo: string
-    a, b, c, d: int
-    e, f, g: float
-}
+ init {
+    a: int
+    b: float
+ }
 
-a = 1
-b = 1 + 4
-c = 2 * 5 + b
-d = a + c
 
-e = -99999.99
-f = 99.
-g = .9999
+a = 32
 
-var = "@sdADaSjfla%dfg"
-foo = var
-var = "asldk  fh sjf"
+b = 5.0
 
-if (not a > b)
+if ( a < b )
 {
-    write("a no es mas grande que b")
+    write("error")
 }
-
-if (a > b and c > b)
-{
-    write("a es mas grande que b y c es mas grande que b")
-}
-
-if (a > b or c > b)
-{
-    write("a es mas grande que b o c es mas grande que b")
-}
-
-if (a > b)
-{
-    write("a es mas grande que b")
-}
-else
-{
-    write("a es mas chico o igual a b")
-}
-
-read(a)
-read(b)
-read(c)
-
-while (a > b)
-{
-    write("a es mas grande que b")
-    a = a + 1
-}
-
-#+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
-var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
-foo = var
-#+ Esto es un comentario +#
-
-reorder([a+3, 1+1, 9-b],1,2)
-reorder([a*b-2, c+3, 1+1, 9-d],0,2)
-
-x = negativeCalculation(-4.0, 2.3, c, 5.6)
