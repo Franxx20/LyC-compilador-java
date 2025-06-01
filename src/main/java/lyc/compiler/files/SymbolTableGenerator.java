@@ -55,16 +55,8 @@ public class SymbolTableGenerator implements FileGenerator{
             return name;
         }
 
-        public void setName(String name) {
-            this.name = name;
-        }
-
         public String getType(){
             return this.type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
         }
 
         @Override
@@ -83,26 +75,17 @@ public class SymbolTableGenerator implements FileGenerator{
         }
     }
 
-    static public void insertSymbol(String name, SymbolT symbolT) {
-        symbolTable.put(name, symbolT);
-    }
-
     static public void insertConstant(String name, String type) {
         symbolTable.put(name, new SymbolT(name, type, name.replace("_","")));
     }
 
-    static public void insertVariable(String name, String type) {
-        try {
-            _insertVariable(name, type);
-        } catch (DuplicatedVariableDefinitionException e) {
-            e.printStackTrace();
-            System.err.println("Error trying to insert variable " + name + " in symbol table.");
-        }
+    static public void insertVariable(String name, String type) throws DuplicatedVariableDefinitionException {
+        _insertVariable(name, type);
     }
 
     static private void _insertVariable(String name, String type) throws DuplicatedVariableDefinitionException {
         if (symbolTable.containsKey(name)) {
-            throw new DuplicatedVariableDefinitionException("Variable=" + name + " was already defined.");
+            throw new DuplicatedVariableDefinitionException("Variable = " + name + " was already defined.");
         }
         symbolTable.put(name, new SymbolT(name, type));
     }

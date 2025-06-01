@@ -17,7 +17,7 @@ public final class Compiler {
     public static void main(String[] args) {
         if (args.length != 1) {
             System.out.println("Filename must be provided as argument.");
-            System.exit(0);
+            System.exit(1);
         }
 
         try (Reader reader = FileFactory.create(args[0])) {
@@ -28,10 +28,10 @@ public final class Compiler {
             FileOutputWriter.writeOutput("final.asm", new SymbolTableGenerator());
         } catch (IOException e) {
             System.err.println("There was an error trying to read input file " + e.getMessage());
-            System.exit(0);
+            System.exit(1);
         } catch (Exception e) {
             System.err.println("Compilation error: " + e.getMessage());
-            System.exit(0);
+            System.exit(1);
         }
 
         System.out.println("Compilation Successful");

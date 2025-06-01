@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Stack;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.TripleManager;
+import lyc.compiler.model.InvalidTypeException;
+import lyc.compiler.model.UndefinedVariableException;
 
 class Parser;
 
@@ -135,11 +137,11 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
                                 if(sym.getType() == e.getType()) {
                                     TripleManager.addTriple("=", id, "[" + exp_idx + "]");
                                 } else {
-                                    System.out.println("No se le puede asignar a una variable de tipo: "
-                                    + sym.getType() + "un tipo de dato: " + e.getType());
+                                    throw new InvalidTypeException("El tipo de la variable " + sym.getName() + ": " + sym.getType() +
+                                    " no corresponde con el tipo de la expresion " + e.getName() + ": " + e.getType());
                                 }
                             } else {
-                                 System.out.println("Variable: " + id + " is not defined.");
+                                 throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
                             }
 
                             System.out.println("assignment = id = expression");
@@ -151,8 +153,20 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
                         :} |
                         IDENTIFIER:id ASSIG STRING_CONSTANT:sc
                         {:
-                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol("_"+sc);
-                            TripleManager.addTriple("=",id,sym.getName());
+                            SymbolTableGenerator.SymbolT sym_sc = SymbolTableGenerator.getSymbol("_"+sc);
+                            SymbolTableGenerator.SymbolT sym_id = SymbolTableGenerator.getSymbol(id);
+
+                            if(sym_sc != null && sym_id != null) {
+                                if(sym_sc.getType() == sym_id.getType()) {
+                                    TripleManager.addTriple("=",id,sym_sc.getName());
+                                } else {
+                                    throw new InvalidTypeException("El tipo de la variable " + sym_id.getName() + ": " + sym_id.getType() +
+                                    " no corresponde con el tipo de la expresion " + sym_sc.getName() + ": " + sym_sc.getType());
+                                }
+                            } else {
+                                 throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+
                             System.out.println("assignment = id = string_constant");
                         :}
                         ;
@@ -260,8 +274,7 @@ expression          ::= expression:e PLUS term:t
                                 if(e.getType() == t.getType()) {
                                     exp_idx = TripleManager.addTriple("+", "[" + exp_idx + "]", "[" + term_idx + "]");
                                 } else {
-                                    System.out.println("No se puede sumar un " + e.getType() +
-                                    " con un " + t.getType());
+                                    throw new InvalidTypeException("No se puede sumar un " + e.getType() + " con un " + t.getType());
                                 }
                             }
                             RESULT = t;
@@ -273,8 +286,7 @@ expression          ::= expression:e PLUS term:t
                                 if(e.getType() == t.getType()) {
                                     exp_idx = TripleManager.addTriple("-", "[" + exp_idx + "]", "[" + term_idx + "]");
                                 } else {
-                                    System.out.println("No se puede restar un " + e.getType() +
-                                    " con un " + t.getType());
+                                    throw new InvalidTypeException("No se puede restar un " + e.getType() + " con un " + t.getType());
                                 }
                             }
                             RESULT = t;
@@ -294,8 +306,7 @@ term                ::= term:t MULT factor:f
                                 if(t.getType() == f.getType()) {
                                     term_idx = TripleManager.addTriple("*", "[" + term_idx + "]", "[" + factor_idx + "]");
                                 } else {
-                                    System.out.println("No se puede multiplicar un " + t.getType() +
-                                    " con un " + f.getType());
+                                    throw new InvalidTypeException("No se puede multiplicar un " + t.getType() + " con un " + f.getType());
                                 }
                             }
                             RESULT = f;
@@ -307,8 +318,7 @@ term                ::= term:t MULT factor:f
                                 if(t.getType() == f.getType()) {
                                     term_idx = TripleManager.addTriple("/","[" + term_idx + "]", "[" + factor_idx + "]");
                                 } else {
-                                    System.out.println("No se puede dividir un " + t.getType() +
-                                    " con un " + f.getType());
+                                    throw new InvalidTypeException("No se puede dividir un " + t.getType() + " con un " + f.getType());
                                 }
                             }
                             RESULT = f;
@@ -325,12 +335,13 @@ term                ::= term:t MULT factor:f
 factor              ::= IDENTIFIER:id
                         {:
                             SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            System.out.println("Id: aaaaalsdjf;lkajsd;flkjas;dlfkja;sldfja;lsdjf;laksjdf;laksjdf;lkasjdf;lkjqaaaaaaaaaa" + sym);
                             if(sym != null) {
                                 factor_idx = TripleManager.addTriple(id,null,null);
                                 RESULT = sym;
                                 System.out.println("Id: " + sym.getName());
                             } else {
-                                System.out.println("variable: " + id + " is not defined" );
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
                             }
                         :} |
                         SUB IDENTIFIER:id
@@ -341,7 +352,7 @@ factor              ::= IDENTIFIER:id
                                 RESULT = sym;
                                 System.out.println("Id: " + sym.getName());
                             } else {
-                                System.out.println("variable: " + id + " is not defined" );
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
                             }
                         :}
                         |
@@ -460,7 +471,7 @@ comparation         ::= expression:e1 {: exp_idx_aux = exp_idx; :} comparator:cm
                                 if(e1.getType() == e2.getType()) {
                                     TripleManager.addTriple("CMP", "[" + exp_idx_aux + "]", "[" + exp_idx + "]");
                                 } else {
-                                    System.out.println("No se puede comparar un tipo de dato: " + e1.getType()
+                                    throw new InvalidTypeException("No se puede comparar un tipo de dato: " + e1.getType()
                                     + " con un tipo de dato: " + e2.getType());
                                 }
                             }
@@ -510,7 +521,7 @@ function            ::= reorder_function
                             if(sym != null) {
                                  TripleManager.addTriple("READ", id, null);
                             } else {
-                                System.out.println("variable: " + id + " is not defined" );
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
                             }
                             System.out.println("function = read ( IDENTIFIER )");
                         :} |
@@ -527,7 +538,7 @@ write_args          ::= IDENTIFIER:id
                             if(sym != null) {
                                  RESULT = id;
                             } else {
-                                System.out.println("variable: " + id + " is not defined" );
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
                             }
                             System.out.println("write_args = IDENTIFIER");
                         :} |
