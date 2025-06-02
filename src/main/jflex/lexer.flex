@@ -141,8 +141,6 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
 
   /* identifiers */
   {Identifier}                              {
-                                                String value = yytext();
-                                                SymbolTableGenerator.insertVariable(value, "id");
                                                 return symbol(ParserSym.IDENTIFIER, yytext());
                                             }
 
@@ -155,9 +153,8 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                     throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
 
-
-                                                SymbolTableGenerator.insertConstant("_" + yytext(), "integer");
-                                                return symbol(ParserSym.INTEGER_CONSTANT, yytext());
+                                                SymbolTableGenerator.insertConstant("_" + yytext(), "int");
+                                                return symbol(ParserSym.INTEGER_CONSTANT, value);
                                             }
 
   {FloatConstant}                           {
@@ -170,8 +167,9 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                 } catch (NumberFormatException e){
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
+
                                                 SymbolTableGenerator.insertConstant("_" + yytext(), "float");
-                                                return symbol(ParserSym.FLOAT_CONSTANT, yytext());
+                                                return symbol(ParserSym.FLOAT_CONSTANT, value);
                                             }
 
   {StringConstant}                          {

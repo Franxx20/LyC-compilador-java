@@ -1,15 +1,34 @@
 package lyc.compiler;
 
 import java_cup.runtime.*;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.TripleManager;
-import java.util.Stack;
+import lyc.compiler.model.InvalidTypeException;
+import lyc.compiler.model.UndefinedVariableException;
 
 class Parser;
 
-action code {:
+
+parser code {:
+    private HashMap<String, String> cmp_map = new HashMap<String,String>();
+    private ArrayList<String> identifiers_list = new ArrayList<String>();
     private Stack<Integer> jumpStack = new Stack<>();
     private Stack<Integer> negStack = new Stack<>();
+    private ArrayList<String> reorderList = new ArrayList();
+    private int cte_idx, factor_idx, term_idx, exp_idx, exp_idx_aux;
+:}
+
+init with {:
+     cmp_map.put("EQUAL","BNE");
+     cmp_map.put("NOT_EQUAL","BEQ");
+     cmp_map.put("LESS_EQUAL","BGT");
+     cmp_map.put("GREATER_EQUAL","BLT");
+     cmp_map.put("LESS","BGE");
+     cmp_map.put("GREATER","BLE");
 :}
 
 // Terminals
@@ -72,10 +91,10 @@ non terminal selection;
 non terminal sentence;
 non terminal assignment;
 
-non terminal String expression;
-non terminal String term;
-non terminal String factor;
-non terminal String constant;
+non terminal SymbolTableGenerator.SymbolT expression;
+non terminal SymbolTableGenerator.SymbolT term;
+non terminal SymbolTableGenerator.SymbolT factor;
+non terminal SymbolTableGenerator.SymbolT constant;
 
 non terminal String condition;
 non terminal String comparation;
@@ -83,7 +102,7 @@ non terminal String comparator;
 
 non terminal list_declaration;
 non terminal var_list;
-non terminal var_type;
+non terminal String var_type;
 non terminal function;
 non terminal negative_function;
 non terminal reorder_function;
@@ -91,7 +110,7 @@ non terminal arguments;
 non terminal arguments_list;
 non terminal float_list;
 non terminal float_element;
-non terminal String write_args;
+non terminal write_args;
 
 // Start Symbol Definition
 start with start_symbol;
@@ -113,17 +132,50 @@ sentence            ::= assignment {: System.out.println("sentence = assignment"
 
 assignment          ::= IDENTIFIER:id ASSIG expression:e
                         {:
-                            TripleManager.addTriple(":=", id, "[" + e + "]");
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null && e != null) {
+                                if(sym.getType() == e.getType()) {
+                                    TripleManager.addTriple("=", id, "[" + exp_idx + "]");
+                                } else {
+                                    throw new InvalidTypeException("El tipo de la variable " + sym.getName() + ": " + sym.getType() +
+                                    " no corresponde con el tipo de la expresion " + e.getName() + ": " + e.getType());
+                                }
+                            } else {
+                                 throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+
                             System.out.println("assignment = id = expression");
                         :} |
                         IDENTIFIER:id ASSIG negative_function:nf
                         {:
-                            TripleManager.addTriple(":=", id, "[" + nf + "]");
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                if(sym.getType() == "float") {
+                                    TripleManager.addTriple("=",id,"[" + nf + "]");
+                                } else {
+                                    throw new InvalidTypeException("variable de asignacion tiene que ser del tipo float pero es del tipo " + sym.getType());
+                                }
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
                             System.out.println("assignment = id = negative_function");
                         :} |
                         IDENTIFIER:id ASSIG STRING_CONSTANT:sc
                         {:
-                            TripleManager.addTriple(":=", id, sc);
+                            SymbolTableGenerator.SymbolT sym_sc = SymbolTableGenerator.getSymbol("_"+sc);
+                            SymbolTableGenerator.SymbolT sym_id = SymbolTableGenerator.getSymbol(id);
+
+                            if(sym_sc != null && sym_id != null) {
+                                if(sym_sc.getType() == sym_id.getType()) {
+                                    TripleManager.addTriple("=",id,sym_sc.getName());
+                                } else {
+                                    throw new InvalidTypeException("El tipo de la variable " + sym_id.getName() + ": " + sym_id.getType() +
+                                    " no corresponde con el tipo de la expresion " + sym_sc.getName() + ": " + sym_sc.getType());
+                                }
+                            } else {
+                                 throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+
                             System.out.println("assignment = id = string_constant");
                         :}
                         ;
@@ -133,10 +185,8 @@ selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACK
                             // Si fue falso salta al final del programa
                             int falseIdx = jumpStack.pop();
                             TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 1);
-
                             System.out.println("selection = if (condition) { program }");
-                        :}
-                        |
+                        :} |
                         IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
                         {:
                             // Si fue falso salta al else
@@ -144,16 +194,14 @@ selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACK
                             TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 2);
 
                             // Si fue verdadero se evita el else
-                            int biIdx = TripleManager.addTriple("BI", "J", null);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
                             jumpStack.push(biIdx);
-
                         :}
                         ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
                         {:
                             // Se hace ese salto sobre el else
                             int biIdx = jumpStack.pop();
                             TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
-
                             System.out.println("selection = if (condition) { program } else { program }");
                         :}
                         ;
@@ -171,44 +219,91 @@ iteration           ::= WHILE OPEN_BRACKET
                             TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex() + 2);
 
                             // Bifurcación al inicio para evaluar de nuevo la condicion
-                            int biIdx = TripleManager.addTriple("BI", "J", null);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
                             int etIdx = jumpStack.pop();
                             TripleManager.patchTriple(biIdx, etIdx);
 
                             System.out.println("while (condition) { program }");
                         :};
 
-var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET {: System.out.println("init { list_declaration }"); :};
+var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET
+                        {: System.out.println("init { list_declaration }"); :}
+                        ;
 
-list_declaration    ::= list_declaration var_list COLON var_type {: System.out.println("list_declaration = list_declaration var_list : var_type"); :} |
-                        var_list COLON var_type {: System.out.println("list_declaration = var_list : var_type"); :}
+list_declaration    ::= list_declaration var_list COLON var_type:vt
+                        {:
+                            for(String id : identifiers_list) {
+                                SymbolTableGenerator.insertVariable(id, vt);
+                            }
+                            identifiers_list.clear();
+                            System.out.println("list_declaration = list_declaration var_list : var_type");
+                        :} |
+                        var_list COLON var_type:vt
+                        {:
+                            for(String id : identifiers_list) {
+                                SymbolTableGenerator.insertVariable(id, vt);
+                            }
+                            identifiers_list.clear();
+                            System.out.println("list_declaration = var_list : var_type");
+                        :}
                         ;
 
 var_list            ::= var_list COMMA IDENTIFIER:id
-                        {:System.out.println("var_list = var_list , IDENTIFIER");:} |
+                        {:
+                            identifiers_list.add(id);
+                            System.out.println("var_list = var_list , IDENTIFIER");
+                        :} |
                         IDENTIFIER:id
-                        {:System.out.println("var_list = IDENTIFIER");:}
+                        {:
+                            identifiers_list.add(id);
+                            System.out.println("var_list = IDENTIFIER");
+                        :}
                         ;
 
-var_type            ::= TYPE_INT {: System.out.println("int"); :} |
-                        TYPE_FLOAT {: System.out.println("float"); :} |
-                        TYPE_STRING {: System.out.println("string"); :}
+var_type            ::= TYPE_INT
+                        {:
+                            RESULT = "int";
+                            System.out.println("int");
+                        :} |
+                        TYPE_FLOAT
+                        {:
+                            RESULT = "float";
+                            System.out.println("float");
+                        :} |
+                        TYPE_STRING
+                        {:
+                            RESULT = "string";
+                            System.out.println("string");
+                        :}
                         ;
 
 expression          ::= expression:e PLUS term:t
                         {:
-                            int index = TripleManager.addTriple("+", "[" + e + "]", "[" + t + "]");
-                            RESULT = Integer.toString(index);
+                            if(e != null && t != null) {
+                                if(e.getType() == t.getType()) {
+                                    exp_idx = TripleManager.addTriple("+", "[" + exp_idx + "]", "[" + term_idx + "]");
+                                } else {
+                                    throw new InvalidTypeException("No se puede sumar un " + e.getType() + " con un " + t.getType());
+                                }
+                            }
+                            RESULT = t;
                             System.out.println("+");
                         :} |
                         expression:e SUB term:t
                         {:
-                            int index = TripleManager.addTriple("-", "[" + e + "]", "[" + t + "]");
-                            RESULT = Integer.toString(index);
+                            if(e != null && t != null) {
+                                if(e.getType() == t.getType()) {
+                                    exp_idx = TripleManager.addTriple("-", "[" + exp_idx + "]", "[" + term_idx + "]");
+                                } else {
+                                    throw new InvalidTypeException("No se puede restar un " + e.getType() + " con un " + t.getType());
+                                }
+                            }
+                            RESULT = t;
                             System.out.println("-");
                         :} |
                         term:t
                         {:
+                            exp_idx = term_idx;
                             RESULT = t;
                             System.out.println("Expression = Term");
                         :}
@@ -216,18 +311,31 @@ expression          ::= expression:e PLUS term:t
 
 term                ::= term:t MULT factor:f
                         {:
-                            int index = TripleManager.addTriple("*", "[" + t + "]", "[" + f + "]");
-                            RESULT = Integer.toString(index);
+                            if(t != null && f != null) {
+                                if(t.getType() == f.getType()) {
+                                    term_idx = TripleManager.addTriple("*", "[" + term_idx + "]", "[" + factor_idx + "]");
+                                } else {
+                                    throw new InvalidTypeException("No se puede multiplicar un " + t.getType() + " con un " + f.getType());
+                                }
+                            }
+                            RESULT = f;
                             System.out.println("*");
                         :} |
                         term:t DIV factor:f
                         {:
-                            int index = TripleManager.addTriple("/", "[" + t + "]", "[" + f + "]");
-                            RESULT = Integer.toString(index);
+                            if(t != null && f != null) {
+                                if(t.getType() == f.getType()) {
+                                    term_idx = TripleManager.addTriple("/","[" + term_idx + "]", "[" + factor_idx + "]");
+                                } else {
+                                    throw new InvalidTypeException("No se puede dividir un " + t.getType() + " con un " + f.getType());
+                                }
+                            }
+                            RESULT = f;
                             System.out.println("/");
                         :} |
                         factor:f
                         {:
+                            term_idx = factor_idx;
                             RESULT = f;
                             System.out.println("Term = factor");
                         :}
@@ -235,30 +343,42 @@ term                ::= term:t MULT factor:f
 
 factor              ::= IDENTIFIER:id
                         {:
-                            int index = TripleManager.addTriple(id, null, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Id: " + id);
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                factor_idx = TripleManager.addTriple(id,null,null);
+                                RESULT = sym;
+                                System.out.println("Id: " + sym.getName());
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
                         :} |
                         SUB IDENTIFIER:id
                         {:
-                            int index = TripleManager.addTriple("-", id, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Negated Id: " + id);
-                        :} |
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                factor_idx = TripleManager.addTriple("-",id,null);
+                                RESULT = sym;
+                                System.out.println("Id: " + sym.getName());
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+                        :}
+                        |
                         constant:cte
                         {:
-                            int index = TripleManager.addTriple(cte, null, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Constant: " + cte);
+                            factor_idx = TripleManager.addTriple(cte.getName(), null, null);
+                            RESULT = cte;
+                            System.out.println("Constant: " + cte.getName());
                         :} |
                         SUB constant:cte
                         {:
-                            int index = TripleManager.addTriple("-", cte, null);
-                            RESULT = Integer.toString(index);
-                            System.out.println("Negated Constant: " + cte);
+                            factor_idx = TripleManager.addTriple("-", cte.getName(), null);
+                            RESULT = cte;
+                            System.out.println("Constant: " + cte.getName());
                         :} |
                         OPEN_BRACKET expression:e CLOSE_BRACKET
                         {:
+                            factor_idx = exp_idx;
                             RESULT = e;
                             System.out.println("Factor = (Expression)");
                         :}
@@ -266,29 +386,40 @@ factor              ::= IDENTIFIER:id
 
 constant            ::= INTEGER_CONSTANT:i
                         {:
-                            RESULT = i;
+                            RESULT = SymbolTableGenerator.getSymbol("_"+i);
                         :} |
                         FLOAT_CONSTANT:f
                         {:
-                            RESULT = f;
+                            RESULT = SymbolTableGenerator.getSymbol("_"+f);
                         :}
                         ;
 
 // Cuando se pase por esta regla, siempre se saldrá de acá con un sólo índice apilado, el que corresponda al salto por falso
-condition           ::= comparation:c
+condition           ::= comparation:cmp
                         {:
-                            int falseIdx = TripleManager.addTriple(c, "J", null);
+                            int falseIdx = TripleManager.addTriple(cmp, "GOTO", null);
                             // Se apila para hacer el salto por caso falso
-
                             jumpStack.push(falseIdx);
                             System.out.println("condition = comparation");
-                        :}
-                        |
-                        comparation:c1
-                        {:
-                            int falseIdx1 = TripleManager.addTriple(c1, "J", null);
+                        :} |
+                        NOT comparation:cmp {:
+                            int falseIdx = TripleManager.addTriple(cmp, "GOTO", null);
 
-                            int trueIdx = TripleManager.addTriple("BI", "J", null);
+                            // Bifurcación para salir por caso falso (o sea verdadero)
+                            int trueIdx = TripleManager.addTriple("BI", "GOTO", null);
+                            jumpStack.push(trueIdx);
+
+                            // Si fue verdadero (o sea falso) hace un saltito sobre la bifurcación
+                            TripleManager.patchTriple(falseIdx, trueIdx + 1);
+
+                            int etIdx = TripleManager.addTriple("ET", "NOT", null); // es solo la etiqueta
+                            System.out.println("condition = NOT comparation");
+                        :} |
+                        comparation:cmp
+                        {:
+                            int falseIdx1 = TripleManager.addTriple(cmp, "GOTO", null);
+
+                            int trueIdx = TripleManager.addTriple("BI", "GOTO", null);
                             // Si fue verdadera se apila para despues salar a la parte verdadera
                             jumpStack.push(trueIdx);
 
@@ -297,35 +428,33 @@ condition           ::= comparation:c
                             TripleManager.patchTriple(falseIdx1, etIdx);
                             // Si la primera comparacion fue falsa, hace un pequeño salto sobre el BI por verdadera
                         :}
-                        OR comparation:c2
+                        OR comparation:cmp2
                         {:
                             // Desapilamos ese index de recien para hacer el salto por verdadera
                             int trueIdx = jumpStack.pop();
 
-                            int falseIdx2 = TripleManager.addTriple(c2, "J", null);
+                            int falseIdx2 = TripleManager.addTriple(cmp2, "GOTO", null);
                             // Se apila para hacer el salto por caso falso, porque ambas dieron falsas
                             jumpStack.push(falseIdx2);
-
                             // Hacemos el salto por verdadera
                             TripleManager.patchTriple(trueIdx, falseIdx2 + 1);
 
                             System.out.println("condition = comparation OR comparation");
-                        :}
-                        |
-                        comparation:c1
+                        :} |
+                        comparation:cmp
                         {:
-                            int falseIdx1 = TripleManager.addTriple(c1, "J", null);
+                            int falseIdx1 = TripleManager.addTriple(cmp, "GOTO", null);
                             // Si la primera ya es falsa, va a salir por falso
                             jumpStack.push(falseIdx1);
 
                             int etIdx = TripleManager.addTriple("ET", "AND", null); // es solo la etiqueta
                         :}
-                        AND comparation:c2
+                        AND comparation:cmp2
                         {:
-                            int falseIdx2 = TripleManager.addTriple(c2, "J", null);
+                            int falseIdx2 = TripleManager.addTriple(cmp2, "GOTO", null);
                             // Si la segunda es falsa, tambien va a salir por falso
 
-                            int trueIndx = TripleManager.addTriple("BI", "J", null);
+                            int trueIndx = TripleManager.addTriple("BI", "GOTO", null);
                             // Si ambas son verdaderas, quiero hacer un pequeño salto sobre los tercetos que vienen ahora (hacia index5 + 1)
 
                             // Ambos indices del salto por falso saltan a la misma lazy
@@ -335,106 +464,182 @@ condition           ::= comparation:c
                             TripleManager.patchTriple(falseIdx1, lazyIdx);
 
                             // Despues de que los dos salten a la lazy, se apila la bifurcacion por falso
-                            int biIdx = TripleManager.addTriple("BI", "J", null);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
                             jumpStack.push(biIdx);
 
                              // Hago ese saltito
                             TripleManager.patchTriple(trueIndx, biIdx + 1);
                             System.out.println("condition = comparation AND comparation");
                         :}
-                        |
-                        NOT comparation:c
+                        ;
+
+comparation         ::= expression:e1 {: exp_idx_aux = exp_idx; :} comparator:cmp expression:e2
                         {:
-                            int falseIdx = TripleManager.addTriple(c, "J", null);
-
-                            // Bifurcación para salir por caso falso (o sea verdadero)
-                            int trueIdx = TripleManager.addTriple("BI", "J", null);
-                            jumpStack.push(trueIdx);
-
-                            // Si fue verdadero (o sea falso) hace un saltito sobre la bifurcación
-                            TripleManager.patchTriple(falseIdx, trueIdx + 1);
-
-                            int etIdx = TripleManager.addTriple("ET", "NOT", null); // es solo la etiqueta
-                            System.out.println("condition = NOT comparation");
-                        :};
-
-comparation         ::= expression:e1 comparator:c expression:e2
-                        {:
-                            TripleManager.addTriple("CMP", "[" + e1 + "]", "[" + e2 + "]");
-                            RESULT = c;
+                            if(e1 != null && e2 != null) {
+                                if(e1.getType() == e2.getType()) {
+                                    TripleManager.addTriple("CMP", "[" + exp_idx_aux + "]", "[" + exp_idx + "]");
+                                } else {
+                                    throw new InvalidTypeException("No se puede comparar un tipo de dato: " + e1.getType()
+                                    + " con un tipo de dato: " + e2.getType());
+                                }
+                            }
+                            RESULT = cmp;
                             System.out.println("comparation = expression comparator expression");
                         :};
 
 comparator          ::= EQUAL
                         {:
-                            RESULT = "BNE";
+                            RESULT = cmp_map.get("EQUAL");
                             System.out.println("==");
-                        :}|
+                        :} |
                         NOT_EQUAL
                         {:
-                            RESULT = "BEQ";
+                            RESULT = cmp_map.get("NOT_EQUAL");
                             System.out.println("!=");
                         :} |
                         LESS_EQUAL
                         {:
-                            RESULT = "BGT";
+                            RESULT = cmp_map.get("LESS_EQUAL");
                             System.out.println("<=");
                         :} |
                         GREATER_EQUAL
                         {:
-                            RESULT = "BLT";
+                            RESULT = cmp_map.get("GREATER_EQUAL");
                             System.out.println(">=");
                         :} |
                         LESS
                         {:
-                            RESULT = "BGE";
+                            RESULT = cmp_map.get("LESS");
                             System.out.println("<");
                         :} |
                         GREATER
                         {:
-                            RESULT = "BLE";
+                            RESULT = cmp_map.get("GREATER");
                             System.out.println(">");
                         :}
                         ;
 
 function            ::= reorder_function
                         {:
-
                             System.out.println("function = reorder_function");
                         :} |
                         READ OPEN_BRACKET IDENTIFIER:id CLOSE_BRACKET
                         {:
-                            TripleManager.addTriple("READ", id, null);
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                 TripleManager.addTriple("READ", id, null);
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
                             System.out.println("function = read ( IDENTIFIER )");
                         :} |
-                        WRITE OPEN_BRACKET write_args:a CLOSE_BRACKET
+                        WRITE OPEN_BRACKET write_args:wa CLOSE_BRACKET
                         {:
-                            TripleManager.addTriple("WRITE", a, null);
+                            int index = TripleManager.addTriple("WRITE", wa, null);
                             System.out.println("function = write ( write_args )");
                         :}
                         ;
 
 write_args          ::= IDENTIFIER:id
                         {:
-                            RESULT = id;
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                 RESULT = id;
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
                             System.out.println("write_args = IDENTIFIER");
-                        :}|
-                        STRING_CONSTANT:s
+                        :} |
+                        STRING_CONSTANT:sc
                         {:
-                            RESULT = s;
-                            System.out.println("write_args = STRING_CONSTANT");
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol("_"+sc);
+                            RESULT = sym.getName();
+                            System.out.println("write_args = string_constant");
+                        :} |
+                        constant:cte
+                        {:
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol("_"+cte);
+                            RESULT = sym.getName();
+                            System.out.println("write_args = constant");
                         :}
                         ;
 
-reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET arguments CLOSE_BRACKET {: System.out.println("reorder_function = reorder ( arguments )"); :}
+reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET
+                        {:
+                            TripleManager.addTriple("ET", "REORDER_BEGIN", null);
+                        :}
+                        arguments CLOSE_BRACKET
+                        {:
+                            TripleManager.addTriple("ET", "REORDER_END", null);
+                            System.out.println("reorder_function = reorder ( arguments )");
+                        :}
                         ;
 
-arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT COMMA INTEGER_CONSTANT
-                        {: System.out.println("arguments = [arguments_list], integer_constant, integer_constant"); :}
+arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT:dir COMMA INTEGER_CONSTANT:pos
+                        {:
+                            TripleManager.addTriple("ET", "REORDER_PROCESSING", null);
+                            int pivot = Integer.parseInt(pos);
+                            int direction = Integer.parseInt(dir);
+
+                            if (pivot < 0 || pivot >= reorderList.size()) {
+                                System.err.println("Error: El pivote " + pivot + " está fuera del rango válido.");
+                                throw new Exception("Pivote fuera de rango");
+                            }
+
+                            List<String> resultList = new ArrayList<>();
+
+                            if (direction == 0) {
+                                // Reordenar derecha del pivote (índices pivot+1 en adelante)
+                                if (pivot >= reorderList.size() - 1) {
+                                    resultList.addAll(reorderList); // nada a reordenar
+                                } else {
+                                    for (int i = 0; i < pivot; i++) {
+                                        resultList.add(reorderList.get(i));
+                                    }
+                                    for (int i = reorderList.size() - 1; i >= pivot; i--) {
+                                        resultList.add(reorderList.get(i));
+                                    }
+                                }
+                            } else if (direction == 1) {
+                                // Reordenar izquierda del pivote (índices 0 a pivot-1)
+                                if (pivot == 0) {
+                                    resultList.addAll(reorderList); // nada a reordenar
+                                } else {
+                                    for (int i = pivot; i >= 0; i--) {
+                                        resultList.add(reorderList.get(i));
+                                    }
+                                    for (int i = pivot+1; i < reorderList.size(); i++) {
+                                        resultList.add(reorderList.get(i));
+                                    }
+                                }
+                            } else {
+                                System.err.println("Error: Dirección inválida (debe ser 0 o 1)");
+                                throw new Exception("Dirección inválida");
+                            }
+
+                            // Generar triples
+                            String firstElem = resultList.remove(0);
+                            int elemIdx = TripleManager.addTriple("[" + firstElem + "]", null, null);
+
+                            for (String elem : resultList) {
+                                elemIdx = TripleManager.addTriple(",", "[" + elem + "]", "[" + elemIdx + "]");
+                            }
+
+                            reorderList.clear();
+                            System.out.println("arguments = [arguments_list], integer_constant, integer_constant");
+                        :}
                         ;
 
-arguments_list      ::= arguments_list COMMA expression {: System.out.println("arguments_list = arguments_list , expression"); :} |
-                        expression {: System.out.println("arguments_list = expression"); :}
+arguments_list      ::= arguments_list COMMA expression
+                        {:
+                            reorderList.add(Integer.toString(exp_idx));
+                            System.out.println("arguments_list = arguments_list , expression");
+                        :} |
+                        expression
+                        {:
+                            reorderList.add(Integer.toString(exp_idx));
+                            System.out.println("arguments_list = expression");
+                        :}
                         ;
 
 negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CLOSE_BRACKET
@@ -449,17 +654,17 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CL
                             //	x = @mult
 
                             TripleManager.addTriple("CMP", "@count", 0);
-                            int falseIdx = TripleManager.addTriple("BNE", "J", 0);
+                            int falseIdx = TripleManager.addTriple("BNE", "GOTO", null);
 
-                            TripleManager.addTriple(":=", "@total", "@sum");
-                            int biIdx = TripleManager.addTriple("BI", "J", 0);
+                            TripleManager.addTriple("=", "@total", "@sum");
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
-                            TripleManager.addTriple(":=", "@total", "@mult");
+                            TripleManager.addTriple("=", "@total", "@mult");
 
                             TripleManager.patchTriple(falseIdx, TripleManager.getLastIndex());
                             TripleManager.patchTriple(biIdx, TripleManager.getLastIndex()+1);
 
-                            int xIdx = TripleManager.addTriple(":=", "@x", "@total");
+                            int xIdx = TripleManager.addTriple("=", "@x", "@total");
 
                             RESULT = Integer.toString(xIdx);
 
@@ -467,11 +672,12 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET float_list CL
                         :}
                         ;
 
+
 float_list          ::= float_element:f
                         {:
-                            TripleManager.addTriple(":=", "@count", 0);
-                            TripleManager.addTriple(":=", "@sum", 0);
-                            TripleManager.addTriple(":=", "@mult", 0);
+                            TripleManager.addTriple("=", "@count", 0);
+                            TripleManager.addTriple("=", "@sum", 0);
+                            TripleManager.addTriple("=", "@mult", 0);
 
                             // if (f < 0)
                             //	 if (@count == 0)
@@ -483,24 +689,24 @@ float_list          ::= float_element:f
                             //	 @mult = @mult * f
 
                             TripleManager.addTriple("CMP", f, 0);
-                            int falseIdx1 = TripleManager.addTriple("BGE", "J", 0);
+                            int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", null);
 
                             TripleManager.addTriple("CMP", "@count", 0);
-                            int falseIdx2 = TripleManager.addTriple("BNE", "J", 0);
+                            int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", null);
 
-                            TripleManager.addTriple(":=", "@parBit", 1);
-                            int biIdx = TripleManager.addTriple("BI", "J", 0);
+                            TripleManager.addTriple("=", "@parBit", 1);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
-                            TripleManager.addTriple(":=", "@parBit", 0);
+                            TripleManager.addTriple("=", "@parBit", 0);
 
                             TripleManager.patchTriple(falseIdx2, TripleManager.getLastIndex());
                             TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
 
-                            int countIdx = TripleManager.addTriple(":=", "@count", "@parBit");
+                            int countIdx = TripleManager.addTriple("=", "@count", "@parBit");
                             TripleManager.addTriple("+", "@sum", f);
-                            int sumIdx = TripleManager.addTriple(":=", "@sum", TripleManager.getLastIndex());
+                            int sumIdx = TripleManager.addTriple("=", "@sum", "[" + TripleManager.getLastIndex() + "]");
                             TripleManager.addTriple("*", "@mult", f);
-                            int multIdx = TripleManager.addTriple(":=", "@mult", TripleManager.getLastIndex());
+                            int multIdx = TripleManager.addTriple("=", "@mult", "[" + TripleManager.getLastIndex() + "]");
 
                             TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
 
@@ -525,24 +731,24 @@ float_list          ::= float_element:f
                             //	 @mult = @mult * f
 
                             TripleManager.addTriple("CMP", f, 0);
-                            int falseIdx1 = TripleManager.addTriple("BGE", "J", 0);
+                            int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", null);
 
                             TripleManager.addTriple("CMP", "@count", 0);
-                            int falseIdx2 = TripleManager.addTriple("BNE", "J", 0);
+                            int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", null);
 
-                            TripleManager.addTriple(":=", "@parBit", 1);
-                            int biIdx = TripleManager.addTriple("BI", "J", 0);
+                            TripleManager.addTriple("=", "@parBit", 1);
+                            int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
-                            TripleManager.addTriple(":=", "@parBit", 0);
+                            TripleManager.addTriple("=", "@parBit", 0);
 
                             TripleManager.patchTriple(falseIdx2, TripleManager.getLastIndex());
                             TripleManager.patchTriple(biIdx, TripleManager.getLastIndex() + 1);
 
-                            int countIdx = TripleManager.addTriple(":=", "@count", "@parBit");
+                            int countIdx = TripleManager.addTriple("=", "@count", "@parBit");
                             TripleManager.addTriple("+", "@sum", f);
-                            int sumIdx = TripleManager.addTriple(":=", "@sum", TripleManager.getLastIndex());
+                            int sumIdx = TripleManager.addTriple("=", "@sum", "[" + TripleManager.getLastIndex() + "]");
                             TripleManager.addTriple("*", "@mult", f);
-                            int multIdx = TripleManager.addTriple(":=", "@mult", TripleManager.getLastIndex());
+                            int multIdx = TripleManager.addTriple("=", "@mult", "[" + TripleManager.getLastIndex() + "]");
 
                             TripleManager.patchTriple(falseIdx1, TripleManager.getLastIndex() + 1);
 
@@ -553,7 +759,34 @@ float_list          ::= float_element:f
                         :}
                         ;
 
-float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
+float_element       ::= IDENTIFIER:id
+                        {:
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                if(sym.getType() == "float") {
+                                    RESULT = id;
+                                } else {
+                                    throw  new InvalidTypeException("El tipo de dato de: " + sym.getName() + " no es de tipo:"
+                                    + " float. Solo se permiten tipos de datos float en la funcion: negativeCalculation");
+                                }
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+                        :} |
                         FLOAT_CONSTANT:f {: RESULT = f; :} |
+                        SUB IDENTIFIER:id
+                        {:
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                if(sym.getType() == "float") {
+                                    RESULT = id;
+                                } else {
+                                    throw  new InvalidTypeException("El tipo de dato de: " + sym.getName() + " no es de tipo:"
+                                    + " float. Solo se permiten tipos de datos float en la funcion: negativeCalculation");
+                                }
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+                        :} |
                         SUB FLOAT_CONSTANT:f {: RESULT = f; :}
                         ;

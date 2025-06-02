@@ -1,5 +1,7 @@
 package lyc.compiler.files;
 
+import lyc.compiler.model.DuplicatedVariableDefinitionException;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Hashtable;
@@ -9,11 +11,10 @@ public class SymbolTableGenerator implements FileGenerator{
     public static Hashtable<String, SymbolT> symbolTable = new Hashtable<String, SymbolT>(100);
 
     public static class SymbolT {
-        public String name;
-        public String type;
-        public String value;
-        public int symbolSize;
-
+        private String name;
+        private String type;
+        private String value;
+        private int symbolSize;
 
         // string constants
         public SymbolT(String name, String type, String value, int symbolSize) {
@@ -54,8 +55,8 @@ public class SymbolTableGenerator implements FileGenerator{
             return name;
         }
 
-        public void setName(String name) {
-            this.name = name;
+        public String getType(){
+            return this.type;
         }
 
         @Override
@@ -74,15 +75,18 @@ public class SymbolTableGenerator implements FileGenerator{
         }
     }
 
-    static public void insertSymbol(String name, SymbolT symbolT) {
-        symbolTable.put(name, symbolT);
-    }
-
     static public void insertConstant(String name, String type) {
         symbolTable.put(name, new SymbolT(name, type, name.replace("_","")));
     }
 
-    static public void insertVariable(String name, String type) {
+    static public void insertVariable(String name, String type) throws DuplicatedVariableDefinitionException {
+        _insertVariable(name, type);
+    }
+
+    static private void _insertVariable(String name, String type) throws DuplicatedVariableDefinitionException {
+        if (symbolTable.containsKey(name)) {
+            throw new DuplicatedVariableDefinitionException("Variable = " + name + " was already defined.");
+        }
         symbolTable.put(name, new SymbolT(name, type));
     }
 

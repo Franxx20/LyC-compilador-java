@@ -1,23 +1,36 @@
+init {
+    var, foo: string
+    a, b, c, d: int
+    e, f, g: float
+}
+
 a = 1
-b = 1
-c = 2
+b = 1 + 4
+c = 2 * 5 + b
+d = a + c
+
+e = -99999.99
+f = 99.
+g = .9999
+
+var = "@sdADaSjfla%dfg"
+foo = var
+var = "asldk  fh sjf"
+
+if (not a > b)
+{
+    write("a no es mas grande que b")
+}
 
 if (a > b and c > b)
 {
     write("a es mas grande que b y c es mas grande que b")
 }
 
-a = -99999.99
-a = 99.
-a = .9999
-
-b = "@sdADaSjfla%dfg"
-b = "asldk  fh sjf"
-
-#+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
-var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
-foo = var
-#+ Esto es un comentario +#
+if (a > b or c > b)
+{
+    write("a es mas grande que b o c es mas grande que b")
+}
 
 if (a > b)
 {
@@ -28,36 +41,9 @@ else
     write("a es mas chico o igual a b")
 }
 
-init {
-    a1, b1: float
-    variable1: int
-    p1, p2, p3: string
-}
-
-a = 1
-b = 1
-c = 2
-
-if (not a > b)
-{
-    write("a no es mas grande que b")
-}
-
-a = 1
-b = 1
-c = 2
-
-if (a > b or c > b)
-{
-    write("a es mas grande que b o c es mas grande que b")
-}
-
 read(a)
 read(b)
 read(c)
-
-a = 1
-b = 3
 
 while (a > b)
 {
@@ -65,9 +51,36 @@ while (a > b)
     a = a + 1
 }
 
-write("asdfasdf")
-write(a)
+#+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
+var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
+foo = var
+#+ Esto es un comentario +#
 
-reorder([x+3, 1+1, 9-x],1,2)
+reorder([a+3, 1+1, 9-b],1,2)
+reorder([a*b-2, c+3, 1+1, 9-d],0,2)
 
-x = negativeCalculation(-4.0, 2.3, c, 5.6)
+g = negativeCalculation(-4.0, 2.3, f, 5.6)
+
+#+ error semantico +#
+#+ variable a duplicada, ya ha sido declarada con anterioridad. +#
+#+ init { +#
+#+    a: int +#
+#+ } +#
+
+#+ error semantico +#
+#+ error el tipo de la variable a no corresponde con el tipo de la expresion asignada +#
+#+ a = 3.9 +#
+#+ a = "string" +#
+
+#+ error semantico +#
+#+ los elementos de una comparacion no peuden ser de distinto tipo +#
+#+ a = 3 +#
+#+ var = "string" +#
+#+ if (a < var) +#
+#+ { +#
+#+ write("hola") +#
+#+ } +#
+
+#+ error +#
+#+ las variables/constantes de negativeCalculation deben ser de tipo float +#
+#+ e = negativeCalculation(-a) +#
