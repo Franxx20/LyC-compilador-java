@@ -148,7 +148,16 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
                         :} |
                         IDENTIFIER:id ASSIG negative_function:nf
                         {:
-                            TripleManager.addTriple("=",id,"[" + nf + "]");
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                if(sym.getType() == "float") {
+                                    TripleManager.addTriple("=",id,"[" + nf + "]");
+                                } else {
+                                    throw new InvalidTypeException("variable de asignacion tiene que ser del tipo float pero es del tipo " + sym.getType());
+                                }
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
                             System.out.println("assignment = id = negative_function");
                         :} |
                         IDENTIFIER:id ASSIG STRING_CONSTANT:sc
@@ -335,7 +344,6 @@ term                ::= term:t MULT factor:f
 factor              ::= IDENTIFIER:id
                         {:
                             SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
-                            System.out.println("Id: aaaaalsdjf;lkajsd;flkjas;dlfkja;sldfja;lsdjf;laksjdf;laksjdf;lkasjdf;lkjqaaaaaaaaaa" + sym);
                             if(sym != null) {
                                 factor_idx = TripleManager.addTriple(id,null,null);
                                 RESULT = sym;
@@ -751,8 +759,34 @@ float_list          ::= float_element:f
                         :}
                         ;
 
-float_element       ::= IDENTIFIER:id  {: RESULT = id; :} |
+float_element       ::= IDENTIFIER:id
+                        {:
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                if(sym.getType() == "float") {
+                                    RESULT = id;
+                                } else {
+                                    throw  new InvalidTypeException("El tipo de dato de: " + sym.getName() + " no es de tipo:"
+                                    + " float. Solo se permiten tipos de datos float en la funcion: negativeCalculation");
+                                }
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+                        :} |
                         FLOAT_CONSTANT:f {: RESULT = f; :} |
-                        SUB IDENTIFIER:id  {: RESULT = id; :} |
+                        SUB IDENTIFIER:id
+                        {:
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                if(sym.getType() == "float") {
+                                    RESULT = id;
+                                } else {
+                                    throw  new InvalidTypeException("El tipo de dato de: " + sym.getName() + " no es de tipo:"
+                                    + " float. Solo se permiten tipos de datos float en la funcion: negativeCalculation");
+                                }
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+                        :} |
                         SUB FLOAT_CONSTANT:f {: RESULT = f; :}
                         ;
