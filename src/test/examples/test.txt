@@ -71,3 +71,12 @@ x = negativeCalculation(-4.0, 2.3, c, 5.6)
 #+ error el tipo de la variable a no corresponde con el tipo de la expresion asignada +#
 #+ a = 3.9 +#
 #+ a = "string" +#
+
+#+ error semantico +#
+#+ los elementos de una comparacion no peuden ser de distinto tipo +#
+#+ a = 3 +#
+#+ var = "string" +#
+#+ if (a < var) +#
+#+ { +#
+#+ write("hola") +#
+#+ } +#

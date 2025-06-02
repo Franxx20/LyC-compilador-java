@@ -1,14 +1,6 @@
  init {
     a: int
-    b: float
+    r: float
  }
 
-
-a = 32
-
-b = 5.0
-
-if ( a < b )
-{
-    write("error")
-}
+r = negativeCalculation(-3)
