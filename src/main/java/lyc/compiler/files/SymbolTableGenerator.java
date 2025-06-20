@@ -8,7 +8,7 @@ import java.util.Hashtable;
 import java.util.Objects;
 
 public class SymbolTableGenerator implements FileGenerator{
-    public static Hashtable<String, SymbolT> symbolTable = new Hashtable<String, SymbolT>(100);
+    private static Hashtable<String, SymbolT> symbolTable = new Hashtable<String, SymbolT>(100);
 
     public static class SymbolT {
         private String name;
@@ -59,6 +59,11 @@ public class SymbolTableGenerator implements FileGenerator{
             return this.type;
         }
 
+        public String getValue() { return value; }
+
+        public int getSymbolSize() { return symbolSize; }
+
+
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof SymbolT symbolT)) return false;
@@ -75,8 +80,12 @@ public class SymbolTableGenerator implements FileGenerator{
         }
     }
 
-    static public void insertConstant(String name, String type) {
+    static public void insertNonStringConstant(String name, String type) {
         symbolTable.put(name, new SymbolT(name, type, name.replace("_","")));
+    }
+
+    static public void insertStringConstant(String name, String type, String value, int symbolSize) {
+        symbolTable.put(name, new SymbolT(name, type, value, symbolSize));
     }
 
     static public void insertVariable(String name, String type) throws DuplicatedVariableDefinitionException {
@@ -93,4 +102,10 @@ public class SymbolTableGenerator implements FileGenerator{
     static public SymbolT getSymbol(String name){
         return symbolTable.get(name);
     }
+
+    public static Hashtable<String, SymbolT> getTable() {
+        return symbolTable;
+    }
 }
+
+

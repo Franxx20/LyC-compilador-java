@@ -20,6 +20,7 @@ import javax.management.RuntimeErrorException;import static lyc.compiler.constan
 %eofval}
 
 %{
+  private int stringConstantCounter = 0;
   private Symbol symbol(int type) {
       return new Symbol(type, yyline, yycolumn);
     }
@@ -153,7 +154,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                     throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
 
-                                                SymbolTableGenerator.insertConstant("_" + yytext(), "int");
+                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "int");
                                                 return symbol(ParserSym.INTEGER_CONSTANT, value);
                                             }
 
@@ -168,7 +169,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
 
-                                                SymbolTableGenerator.insertConstant("_" + yytext(), "float");
+                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "float");
                                                 return symbol(ParserSym.FLOAT_CONSTANT, value);
                                             }
 
@@ -176,8 +177,10 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                 if (yylength() > STRING_MAX_LENGTH){
                                                     throw new InvalidLengthException("String lenght is beyond maximum lenght for: " + yytext());
                                                 } else {
-                                                    SymbolTableGenerator.insertConstant("_" + yytext(), "string");
-                                                    return symbol(ParserSym.STRING_CONSTANT, yytext());
+                                                    String generatedName = "_stringConstant" + stringConstantCounter++;
+                                                    SymbolTableGenerator.insertStringConstant(generatedName, "string", yytext(), yylength());
+
+                                                    return symbol(ParserSym.STRING_CONSTANT, generatedName);
                                                 }
                                             }
 
