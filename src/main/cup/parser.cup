@@ -108,7 +108,7 @@ non terminal function;
 non terminal negative_function;
 non terminal reorder_function;
 non terminal arguments;
-non terminal arguments_list;
+non terminal Integer arguments_list;
 non terminal float_list;
 non terminal float_element;
 non terminal write_args;
@@ -582,18 +582,18 @@ write_args          ::= IDENTIFIER:id
 
 reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET
                         {:
-                            TripleManager.addTriple("ET", "REORDER_BEGIN", null);
+                            // TripleManager.addTriple("ET", "REORDER_BEGIN", null);
                         :}
                         arguments CLOSE_BRACKET
                         {:
-                            TripleManager.addTriple("ET", "REORDER_END", null);
+                            // TripleManager.addTriple("ET", "REORDER_END", null);
                             System.out.println("reorder_function = reorder ( arguments )");
                         :}
                         ;
 
 arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT:dir COMMA INTEGER_CONSTANT:pos
                         {:
-                            TripleManager.addTriple("ET", "REORDER_PROCESSING", null);
+                            // TripleManager.addTriple("ET", "REORDER_PROCESSING", null);
                             int pivot = Integer.parseInt(pos);
                             int direction = Integer.parseInt(dir);
 
@@ -635,10 +635,10 @@ arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET 
 
                             // Generar triples
                             String firstElem = resultList.remove(0);
-                            int elemIdx = TripleManager.addTriple("[" + firstElem + "]", null, null);
+                            int elemIdx = TripleManager.addTriple(",", firstElem, null);
 
                             for (String elem : resultList) {
-                                elemIdx = TripleManager.addTriple(",", "[" + elem + "]", "[" + elemIdx + "]");
+                                elemIdx = TripleManager.addTriple(",", elem, "[" + elemIdx + "]");
                             }
 
                             reorderList.clear();
@@ -646,14 +646,19 @@ arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET 
                         :}
                         ;
 
-arguments_list      ::= arguments_list COMMA expression
+arguments_list      ::= arguments_list:elemCount COMMA expression
                         {:
-                            reorderList.add(Integer.toString(exp_idx));
+                            TripleManager.addTriple("=", "@reOrderX" + elemCount, "[" + exp_idx + "]");
+                            reorderList.add("@reOrderX" + elemCount);
+                            RESULT = elemCount + 1;
                             System.out.println("arguments_list = arguments_list , expression");
                         :} |
                         expression
                         {:
-                            reorderList.add(Integer.toString(exp_idx));
+                            int elemCount = 1;
+                            TripleManager.addTriple("=", "@reOrderX" + elemCount, "[" + exp_idx + "]");
+                            reorderList.add("@reOrderX" + elemCount);
+                            RESULT = elemCount + 1;
                             System.out.println("arguments_list = expression");
                         :}
                         ;

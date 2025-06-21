@@ -156,6 +156,9 @@ public class AsmCodeGenerator implements FileGenerator {
                 case "READ":
                     code.append(handleRead(operand1));
                     break;
+                case ",":
+                    code.append(handleReorder(operand1));
+                    break;
                 // faltan reorder, negfunction
                 default:
                     break;
@@ -254,19 +257,23 @@ public class AsmCodeGenerator implements FileGenerator {
 
     }
 
-    private String handleWrite(String operand1) {
+    private String handleWrite(String operand) {
         StringBuilder sb = new StringBuilder();
 
-        String type = symbolTable.get(operand1).getType();
+        String type = symbolTable.get(operand).getType();
 
         switch (type) {
-            case "string" -> sb.append(String.format("\tDisplayString\t%s\n", operand1));
-            case "int" -> sb.append(String.format("\tDisplayInt\t%s\n", operand1));
-            case "float" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand1));
+            case "string" -> sb.append(String.format("\tDisplayString\t%s\n", operand));
+            case "int" -> sb.append(String.format("\tDisplayInt\t%s\n", operand));
+            case "float" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
         }
         sb.append("\tnewline 1\n");
         return sb.toString();
 
+    }
+
+    private String handleReorder(String operand){
+        return String.format("\tDisplayFloat\t%s\t, 2\n", operand);
     }
 
     private String generateFooter() {
