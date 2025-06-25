@@ -71,13 +71,6 @@ public class AsmCodeGenerator implements FileGenerator {
             }
         }
 
-        sb.append("\t@elem\tdd\t?\n");
-        sb.append("\t@count\tdd\t?\n");
-        sb.append("\t@sum\tdd\t?\n");
-        sb.append("\t@mult\tdd\t?\n");
-        sb.append("\t@parBit\tdd\t?\n");
-        sb.append("\t@total\tdd\t?\n");
-
         return sb.toString();
     }
 
@@ -159,7 +152,6 @@ public class AsmCodeGenerator implements FileGenerator {
                 case ",":
                     code.append(handleReorder(operand1));
                     break;
-                // faltan reorder, negfunction
                 default:
                     break;
             }
@@ -209,13 +201,25 @@ public class AsmCodeGenerator implements FileGenerator {
             // Si el operador no es  es una variable o constante
             if (symbolTable.get(op) != null) {
                 String type = symbolTable.get(op).getType();
-                sb.append(type.equals("int") ? "\tFILD\t" : "\tFLD\t").append(op).append("\n");
+
+                if (type.equals("int")) {
+                    sb.append("\tFILD\t").append(op).append("\n");
+                } else if (type.equals("float")) {
+                    sb.append("\tFLD\t").append(op).append("\n");
+                } else {
+                    sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", op));
+                    sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand1));
+                    sb.append("\tSTRCPY\n");
+                    return sb.toString();
+                }
             }
 
             sb.append(String.format("\tFSTP\t%s\n", operand1));
         }
         else if (operand2.startsWith("_")){ // Asignaciones String tipo a = "perro"
-
+            sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand2));
+            sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand1));
+            sb.append("\tSTRCPY\n");
         }
         else if (operand2.startsWith("@") || operand2.equals("0") || operand2.equals("1")) { // Los casos @x = @y
             sb.append(String.format("\tFLD\t%s\n", operand2));

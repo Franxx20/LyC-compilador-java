@@ -14,6 +14,7 @@ class Parser;
 
 
 parser code {:
+    int elemCount = 1;
     private HashMap<String, String> cmp_map = new HashMap<String,String>();
     private ArrayList<String> identifiers_list = new ArrayList<String>();
     private Stack<Integer> jumpStack = new Stack<>();
@@ -646,19 +647,21 @@ arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET 
                         :}
                         ;
 
-arguments_list      ::= arguments_list:elemCount COMMA expression
+arguments_list      ::= arguments_list COMMA expression
                         {:
+                            SymbolTableGenerator.insertVariable("@reOrderX" + elemCount, "float");
                             TripleManager.addTriple("=", "@reOrderX" + elemCount, "[" + exp_idx + "]");
                             reorderList.add("@reOrderX" + elemCount);
-                            RESULT = elemCount + 1;
+                            elemCount++;
                             System.out.println("arguments_list = arguments_list , expression");
                         :} |
                         expression
                         {:
-                            int elemCount = 1;
+
+                            SymbolTableGenerator.insertVariable("@reOrderX" + elemCount, "float");
                             TripleManager.addTriple("=", "@reOrderX" + elemCount, "[" + exp_idx + "]");
                             reorderList.add("@reOrderX" + elemCount);
-                            RESULT = elemCount + 1;
+                            elemCount++;
                             System.out.println("arguments_list = expression");
                         :}
                         ;
@@ -668,6 +671,13 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET
                             TripleManager.addTriple("=", "@count", 0);
                             TripleManager.addTriple("=", "@sum", 0);
                             TripleManager.addTriple("=", "@mult", 0);
+
+                            SymbolTableGenerator.insertVariable("@count", "int");
+                            SymbolTableGenerator.insertVariable("@sum", "float");
+                            SymbolTableGenerator.insertVariable("@mult", "float");
+                            SymbolTableGenerator.insertVariable("@elem", "float");
+                            SymbolTableGenerator.insertVariable("@parBit", "float");
+                            SymbolTableGenerator.insertVariable("@total", "float");
                         :}
                         float_list CLOSE_BRACKET
                         {:

@@ -8,17 +8,23 @@ include macros2.asm
 MAXTEXTSIZE equ 50
 
 .DATA
+	@reOrderX4	dd	?
 	c	dd	?
+	@reOrderX3	dd	?
 	_5	dd	5
 	b	dd	?
+	@reOrderX2	dd	?
 	_4	dd	4
 	a	dd	?
+	@reOrderX1	dd	?
 	_3	dd	3
 	_2	dd	2
 	_1	dd	1
 	_0	dd	0
+	@total	dd	?
 	_4.0	dd	4.0
 	_stringConstant8	db	"El perro tiene sueño", '$', 28 dup (?)
+	@sum	dd	?
 	_stringConstant7	db	"a es mas grande que b", '$', 27 dup (?)
 	_stringConstant6	db	"a es mas chico o igual a b", '$', 22 dup (?)
 	foo	db	MAXTEXTSIZE dup (?), '$'
@@ -29,22 +35,23 @@ MAXTEXTSIZE equ 50
 	_stringConstant2	db	"a no es mas grande que b", '$', 24 dup (?)
 	_stringConstant1	db	"sorrentinos", '$', 37 dup (?)
 	_stringConstant0	db	"hola buen dia", '$', 35 dup (?)
+	@mult	dd	?
+	@elem	dd	?
 	_5.6	dd	5.6
 	_.9999	dd	.9999
 	_99.	dd	99.
 	_99999.99	dd	99999.99
 	var	db	MAXTEXTSIZE dup (?), '$'
+	@parBit	dd	?
+	@count	dd	?
 	g	dd	?
+	@reOrderX7	dd	?
 	_9	dd	9
 	f	dd	?
+	@reOrderX6	dd	?
 	e	dd	?
+	@reOrderX5	dd	?
 	d	dd	?
-	@elem	dd	?
-	@count	dd	?
-	@sum	dd	?
-	@mult	dd	?
-	@parBit	dd	?
-	@total	dd	?
 .CODE
 
 start:
@@ -76,8 +83,15 @@ start:
 	FSTP	f
 	FLD	_.9999
 	FSTP	g
-	FLD	var
-	FSTP	foo
+	MOV	SI,	OFFSET	_stringConstant0
+	MOV	SI,	OFFSET	var
+	STRCPY
+	MOV	SI,	OFFSET	var
+	MOV	SI,	OFFSET	foo
+	STRCPY
+	MOV	SI,	OFFSET	_stringConstant1
+	MOV	SI,	OFFSET	var
+	STRCPY
 	FILD	a
 	FILD	b
 	FXCH
@@ -171,8 +185,12 @@ WHILE73:
 	FSTP	a
 	JMP	WHILE73
 END_WHILE84:
-	FLD	var
-	FSTP	foo
+	MOV	SI,	OFFSET	_stringConstant8
+	MOV	SI,	OFFSET	var
+	STRCPY
+	MOV	SI,	OFFSET	var
+	MOV	SI,	OFFSET	foo
+	STRCPY
 	FILD	a
 	FILD	_3
 	FADD
@@ -193,23 +211,23 @@ END_WHILE84:
 	FMUL
 	FILD	_2
 	FSUB
-	FSTP	@reOrderX1
+	FSTP	@reOrderX4
 	FILD	c
 	FILD	_3
 	FADD
-	FSTP	@reOrderX2
+	FSTP	@reOrderX5
 	FILD	_1
 	FILD	_1
 	FADD
-	FSTP	@reOrderX3
+	FSTP	@reOrderX6
 	FILD	_9
 	FILD	d
 	FSUB
-	FSTP	@reOrderX4
-	DisplayFloat	@reOrderX1	, 2
-	DisplayFloat	@reOrderX2	, 2
+	FSTP	@reOrderX7
 	DisplayFloat	@reOrderX4	, 2
-	DisplayFloat	@reOrderX3	, 2
+	DisplayFloat	@reOrderX5	, 2
+	DisplayFloat	@reOrderX7	, 2
+	DisplayFloat	@reOrderX6	, 2
 	FLD	0
 	FSTP	@count
 	FLD	0
