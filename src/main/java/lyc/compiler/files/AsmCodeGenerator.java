@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 public class AsmCodeGenerator implements FileGenerator {
-    private List<TripleManager.Triple> triples;
-    private Hashtable<String, SymbolTableGenerator.SymbolT> symbolTable;
+    private static List<TripleManager.Triple> triples;
+    private static Hashtable<String, SymbolTableGenerator.SymbolT> symbolTable;
 
     public void generate(List<TripleManager.Triple> triples, Hashtable<String, SymbolTableGenerator.SymbolT> symbolTable) {
-        this.triples = triples;
-        this.symbolTable = symbolTable;
+        AsmCodeGenerator.triples = triples;
+        AsmCodeGenerator.symbolTable = symbolTable;
 
         try (FileWriter fileWriter = new FileWriter("final.asm")) {
             generate(fileWriter);

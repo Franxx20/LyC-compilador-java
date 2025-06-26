@@ -806,8 +806,7 @@ float_element       ::= IDENTIFIER:id
                             SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
                             if(sym != null) {
                                 if(sym.getType() == "float") {
-                                    int elemIdx = TripleManager.addTriple(id, null, null);
-                                    RESULT = elemIdx;
+                                    RESULT = TripleManager.addTriple(id, null, null);
                                 } else {
                                     throw  new InvalidTypeException("El tipo de dato de: " + sym.getName() + " no es de tipo:"
                                     + " float. Solo se permiten tipos de datos float en la funcion: negativeCalculation");
@@ -818,16 +817,15 @@ float_element       ::= IDENTIFIER:id
                         :} |
                         FLOAT_CONSTANT:f
                         {:
-                            int elemIdx = TripleManager.addTriple("_" + f, null, null);
-                            RESULT = elemIdx;
+
+                            RESULT = TripleManager.addTriple("_" + f, null, null);
                         :} |
                         SUB IDENTIFIER:id
                         {:
                             SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
                             if(sym != null) {
                                 if(sym.getType() == "float") {
-                                    int elemIdx = TripleManager.addTriple("-", id, null);
-                                    RESULT = elemIdx;
+                                    RESULT = TripleManager.addTriple("-", id, null);
                                 } else {
                                     throw  new InvalidTypeException("El tipo de dato de: " + sym.getName() + " no es de tipo:"
                                     + " float. Solo se permiten tipos de datos float en la funcion: negativeCalculation");
@@ -838,7 +836,6 @@ float_element       ::= IDENTIFIER:id
                         :} |
                         SUB FLOAT_CONSTANT:f
                         {:
-                            int elemIdx = TripleManager.addTriple("-", "_" + f, null);
-                            RESULT = elemIdx;
+                            RESULT = TripleManager.addTriple("-", "_" + f, null);
                         :}
                         ;
