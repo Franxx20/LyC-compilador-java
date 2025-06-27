@@ -154,7 +154,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                     throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
 
-                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "int");
+                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "CTE_INTEGER");
                                                 return symbol(ParserSym.INTEGER_CONSTANT, value);
                                             }
 
@@ -169,7 +169,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
 
-                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "float");
+                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "CTE_FLOAT");
                                                 return symbol(ParserSym.FLOAT_CONSTANT, value);
                                             }
 
@@ -178,7 +178,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                     throw new InvalidLengthException("String lenght is beyond maximum lenght for: " + yytext());
                                                 } else {
                                                     String generatedName = "_stringConstant" + stringConstantCounter++;
-                                                    SymbolTableGenerator.insertStringConstant(generatedName, "string", yytext(), yylength());
+                                                    SymbolTableGenerator.insertStringConstant(generatedName, "CTE_STRING", yytext(), yylength());
 
                                                     return symbol(ParserSym.STRING_CONSTANT, generatedName);
                                                 }
