@@ -56,7 +56,13 @@ public class SymbolTableGenerator implements FileGenerator{
         }
 
         public String getType(){
-            return this.type;
+            String result = switch (this.type) {
+                case "CTE_STRING" -> "string";
+                case "CTE_FLOAT" -> "float";
+                case "CTE_INTEGER" -> "int";
+                default -> this.type;
+            };
+            return result;
         }
 
         public String getValue() { return value; }
