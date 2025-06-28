@@ -64,7 +64,7 @@ public class AsmCodeGenerator implements FileGenerator {
                 }
             } else if (type.equals("int")) {
                 if (value != null) {
-                    sb.append(String.format("\t%s\tdd\t%s\n", name, value));
+                    sb.append(String.format("\t%s\tdd\t%s\n", name, value + ".0"));
                 } else {
                     sb.append(String.format("\t%s\tdd\t?\n", name));
                 }
@@ -175,7 +175,7 @@ public class AsmCodeGenerator implements FileGenerator {
             // Si el operador no es  es una variable o constante
             if (symbolTable.get(op) != null) {
                 String type = symbolTable.get(op).getType();
-                sb.append(type.equals("int") ? "\tFILD\t" : "\tFLD\t").append(op).append("\n");
+                sb.append(type.equals("int") ? "\tFLD\t" : "\tFLD\t").append(op).append("\n");
             }
         } else if (operand.startsWith("@")) {
             // Lógica para operandos como @sum y @mult
@@ -199,7 +199,7 @@ public class AsmCodeGenerator implements FileGenerator {
             if (symbolTable.get(op) != null) {
                 String type = symbolTable.get(op).getType();
                 if (type.equals("int")) {
-                    sb.append("\tFILD\t").append(op).append("\n");
+                    sb.append("\tFLD\t").append(op).append("\n");
                 } else if (type.equals("float")) {
                     sb.append("\tFLD\t").append(op).append("\n");
                 } else {
@@ -249,8 +249,8 @@ public class AsmCodeGenerator implements FileGenerator {
 
         switch (type) {
             case "string" -> sb.append(String.format("\tGetString\t%s\n", operand1));
-            case "int" -> sb.append(String.format("\tGetInteger\t%s\n", operand1));
-            case "float" -> sb.append(String.format("\tGetFloat\t%s\t, 2\n", operand1));
+            case "int" -> sb.append(String.format("\tGetFloat\t%s\n", operand1));
+            case "float" -> sb.append(String.format("\tGetFloat\t%s\n", operand1));
         }
 
         return sb.toString();
@@ -264,7 +264,7 @@ public class AsmCodeGenerator implements FileGenerator {
 
         switch (type) {
             case "string" -> sb.append(String.format("\tDisplayString\t%s\n", operand));
-            case "int" -> sb.append(String.format("\tDisplayInteger\t%s\n", operand));
+            case "int" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
             case "float" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
         }
         sb.append("\tnewline 1\n");
