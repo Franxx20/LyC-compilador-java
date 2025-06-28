@@ -698,9 +698,12 @@ arguments_list      ::= arguments_list COMMA expression
 
 negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET
                         {:
-                            TripleManager.addTriple("=", "@count", 0);
-                            TripleManager.addTriple("=", "@sum", 0);
-                            TripleManager.addTriple("=", "@mult", 0);
+                            TripleManager.addTriple("=", "@count", "_" + 0);
+                            TripleManager.addTriple("=", "@sum", "_" + 0);
+                            TripleManager.addTriple("=", "@mult", "_" + 0);
+
+                            SymbolTableGenerator.insertNonStringConstant("_" + 0, "CTE_INTEGER", "0");
+                            SymbolTableGenerator.insertNonStringConstant("_" + 1, "CTE_INTEGER", "1");
 
                             SymbolTableGenerator.insertVariable("@count", "int");
                             SymbolTableGenerator.insertVariable("@sum", "float");
@@ -757,11 +760,11 @@ float_list          ::= float_element:f
                             TripleManager.addTriple("CMP", "@count", 0);
                             int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", null);
 
-                            TripleManager.addTriple("=", "@parBit", 1);
+                            TripleManager.addTriple("=", "@parBit", "_" + 1);
                             int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
                             int elseIdx = TripleManager.addTriple("ET", "NEG_FUNC_ELSE", null);
-                            TripleManager.addTriple("=", "@parBit", 0);
+                            TripleManager.addTriple("=", "@parBit", "_" + 0);
 
                             TripleManager.patchTriple(falseIdx2, elseIdx);
 
@@ -804,10 +807,10 @@ float_list          ::= float_element:f
                             TripleManager.addTriple("CMP", "@count", 0);
                             int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", null);
 
-                            TripleManager.addTriple("=", "@parBit", 1);
+                            TripleManager.addTriple("=", "@parBit", "_" + 1);
                             int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
-                            TripleManager.addTriple("=", "@parBit", 0);
+                            TripleManager.addTriple("=", "@parBit", "_" + 0);
 
                             int elseIdx = TripleManager.addTriple("ET", "NEG_FUNC_ELSE", null);
                             TripleManager.patchTriple(falseIdx2, elseIdx);

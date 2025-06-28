@@ -198,7 +198,6 @@ public class AsmCodeGenerator implements FileGenerator {
             // Si el operador no es una variable o constante
             if (symbolTable.get(op) != null) {
                 String type = symbolTable.get(op).getType();
-
                 if (type.equals("int")) {
                     sb.append("\tFILD\t").append(op).append("\n");
                 } else if (type.equals("float")) {
@@ -213,15 +212,16 @@ public class AsmCodeGenerator implements FileGenerator {
 
             sb.append(String.format("\tFSTP\t%s\n", operand1));
         }
+        else if (operand2.startsWith("@") || operand2.equals("_0") || operand2.equals("_1")) { // Los casos @x = @y
+            sb.append(String.format("\tFLD\t%s\n", operand2));
+            sb.append(String.format("\tFSTP\t%s\n", operand1));
+        }
         else if (operand2.startsWith("_")){ // Asignaciones String tipo a = "perro"
             sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand2));
             sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand1));
             sb.append("\tSTRCPY\n");
         }
-        else if (operand2.startsWith("@") || operand2.equals("0") || operand2.equals("1")) { // Los casos @x = @y
-            sb.append(String.format("\tFLD\t%s\n", operand2));
-            sb.append(String.format("\tFSTP\t%s\n", operand1));
-        }
+
 
         return sb.toString();
     }
@@ -249,7 +249,7 @@ public class AsmCodeGenerator implements FileGenerator {
 
         switch (type) {
             case "string" -> sb.append(String.format("\tGetString\t%s\n", operand1));
-            case "int" -> sb.append(String.format("\tGetInt\t%s\n", operand1));
+            case "int" -> sb.append(String.format("\tGetInteger\t%s\n", operand1));
             case "float" -> sb.append(String.format("\tGetFloat\t%s\t, 2\n", operand1));
         }
 
@@ -264,7 +264,7 @@ public class AsmCodeGenerator implements FileGenerator {
 
         switch (type) {
             case "string" -> sb.append(String.format("\tDisplayString\t%s\n", operand));
-            case "int" -> sb.append(String.format("\tDisplayInt\t%s\n", operand));
+            case "int" -> sb.append(String.format("\tDisplayInteger\t%s\n", operand));
             case "float" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
         }
         sb.append("\tnewline 1\n");
