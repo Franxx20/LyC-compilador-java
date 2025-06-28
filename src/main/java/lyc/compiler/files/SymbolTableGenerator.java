@@ -86,8 +86,8 @@ public class SymbolTableGenerator implements FileGenerator{
         }
     }
 
-    static public void insertNonStringConstant(String name, String type) {
-        symbolTable.put(name, new SymbolT(name, type, name.replace("_","")));
+    static public void insertNonStringConstant(String name, String type, String value) {
+        symbolTable.put(name, new SymbolT(name, type, value));
     }
 
     static public void insertStringConstant(String name, String type, String value, int symbolSize) {
