@@ -31,7 +31,8 @@ public class AsmCodeGenerator implements FileGenerator {
 
     private String generateHeader() {
         return "include number.asm\n"
-                + "include macros2.asm\n\n"
+                + "include macros2.asm\n"
+                + "include macros.asm\n\n"
                 + ".MODEL LARGE\n"
                 + ".386\n"
                 + ".STACK 200h\n\n"
@@ -254,7 +255,6 @@ public class AsmCodeGenerator implements FileGenerator {
         }
 
         return sb.toString();
-
     }
 
     private String handleWrite(String operand) {
