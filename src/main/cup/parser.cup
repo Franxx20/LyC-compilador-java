@@ -723,7 +723,7 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET
                             //  else
                             //	x = @mult
 
-                            TripleManager.addTriple("CMP", "@count", 0);
+                            TripleManager.addTriple("CMP", "@count", "_" + 0);
                             int falseIdx = TripleManager.addTriple("BNE", "GOTO", null);
 
                             TripleManager.addTriple("=", "@total", "@sum");
@@ -754,10 +754,10 @@ float_list          ::= float_element:f
                             //	 @mult = @mult * f
 
                             TripleManager.addTriple("=", "@elem", "[" + f + "]");
-                            TripleManager.addTriple("CMP", "@elem", 0);
+                            TripleManager.addTriple("CMP", "@elem", "_" + 0);
                             int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", null);
 
-                            TripleManager.addTriple("CMP", "@count", 0);
+                            TripleManager.addTriple("CMP", "@count", "_" + 0);
                             int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", null);
 
                             TripleManager.addTriple("=", "@parBit", "_" + 1);
@@ -801,10 +801,10 @@ float_list          ::= float_element:f
                             //	 @mult = @mult * f
 
                             TripleManager.addTriple("=", "@elem", "[" + f + "]");
-                            TripleManager.addTriple("CMP", "@elem", 0);
+                            TripleManager.addTriple("CMP", "@elem", "_" + 0);
                             int falseIdx1 = TripleManager.addTriple("BGE", "GOTO", null);
 
-                            TripleManager.addTriple("CMP", "@count", 0);
+                            TripleManager.addTriple("CMP", "@count", "_" + 0);
                             int falseIdx2 = TripleManager.addTriple("BNE", "GOTO", null);
 
                             TripleManager.addTriple("=", "@parBit", "_" + 1);

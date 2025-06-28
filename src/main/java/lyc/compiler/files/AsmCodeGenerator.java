@@ -228,7 +228,7 @@ public class AsmCodeGenerator implements FileGenerator {
 
     private String handleComparison(String operand1, String operand2) {
         return loadOperand(operand1) +
-                (operand2.equals("0")? "\tFLDZ\n": loadOperand(operand2)) +
+                (operand2.equals("_0")? "\tFLDZ\n": loadOperand(operand2)) +
                 "\tFXCH\n\tFCOMP\n\tFSTSW\tAX\n\tSAHF\n\tFFREE\n";
 
     }
