@@ -79,9 +79,9 @@ public class AsmCodeGenerator implements FileGenerator {
 
         code.append(".CODE\n\n")
                 .append("start:\n")
-                .append("\tMOV EAX,@DATA\n")
-                .append("\tMOV DS,EAX\n")
-                .append("\tMOV ES,EAX\n\n");
+                .append("\tMOV AX,@DATA\n")
+                .append("\tMOV DS,AX\n")
+                .append("\tMOV ES,AX\n\n");
 
         for (TripleManager.Triple triple : triples) {
             String operator = triple.getOperator();
@@ -273,7 +273,7 @@ public class AsmCodeGenerator implements FileGenerator {
     }
 
     private String handleReorder(String operand){
-        return String.format("\tDisplayFloat\t%s\t, 2\n", operand);
+        return String.format("\tDisplayFloat\t%s\t, 2\n\tnewLine 1\n", operand);
     }
 
     private String generateFooter() {
