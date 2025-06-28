@@ -13,9 +13,9 @@ e = -99999.99
 f = 99.
 g = .9999
 
-var = "@sdADaSjfla%dfg"
+var = "hola buen dia"
 foo = var
-var = "asldk  fh sjf"
+var = "sorrentinos"
 
 if (not a > b)
 {
@@ -52,7 +52,7 @@ while (a > b)
 }
 
 #+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
-var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
+var = "El perro tiene sueño"
 foo = var
 #+ Esto es un comentario +#
 
@@ -81,6 +81,6 @@ g = negativeCalculation(-4.0, 2.3, f, 5.6)
 #+ write("hola") +#
 #+ } +#
 
-#+ error +#
-#+ las variables/constantes de negativeCalculation deben ser de tipo float +#
+#+ error+#
+#+ los variables/constantes de negativeCalculation deben ser de tipo float +#
 #+ e = negativeCalculation(-a) +#

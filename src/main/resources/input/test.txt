@@ -9,13 +9,18 @@ b = 1 + 4
 c = 2 * 5 + b
 d = a + c
 
+write(a)
+write(b)
+write(c)
+write(d)
+
 e = -99999.99
 f = 99.
 g = .9999
 
-var = "@sdADaSjfla%dfg"
+var = "hola buen dia"
 foo = var
-var = "asldk  fh sjf"
+var = "sorrentinos"
 
 if (not a > b)
 {
@@ -48,11 +53,11 @@ read(c)
 while (a > b)
 {
     write("a es mas grande que b")
-    a = a + 1
+    a = a - 1
 }
 
 #+ commentario alsdkjf ;laksjd;flkajsd;lfkjas;ldkfja;slkdfj;alskdjf;laksjdf;laksj +#
-var = "as;ldfj;alksjdf;lkasjdf;lkajsd;lfkjas;ldfkj"
+var = "El perro tiene sueño"
 foo = var
 #+ Esto es un comentario +#
 

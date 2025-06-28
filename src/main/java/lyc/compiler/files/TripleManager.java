@@ -32,7 +32,7 @@ public class TripleManager {
     }
 
     public static List<Triple> getTriples() {
-        return new ArrayList(triples);
+        return new ArrayList<>(triples);
     }
 
     public static void reset() {
