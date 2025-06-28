@@ -162,10 +162,7 @@ public class AsmCodeGenerator implements FileGenerator {
 
 
     private String handleArithmetic(String operand1, String operand2) {
-
-        return loadOperand(operand1) +
-                loadOperand(operand2);
-
+        return loadOperand(operand1) + loadOperand(operand2);
     }
 
     private String loadOperand(String operand) {
@@ -185,7 +182,7 @@ public class AsmCodeGenerator implements FileGenerator {
             sb.append(String.format("\tFLD\t%s\n", operand));
         } else if (operand.startsWith("_") && operand.length() > 1) {
             // Este puede pasar cuando hay un numero negativo, ej: [16] = (-, _99999.99, _)
-            sb.append(String.format("\tFLD\t-1\n\tFLD\t%s\n\tFMUL\n", operand, operand));
+            sb.append(String.format("\tFLD\t_menosUno\n\tFLD\t%s\n\tFMUL\n", operand, operand));
         }
 
         return sb.toString();
@@ -198,7 +195,7 @@ public class AsmCodeGenerator implements FileGenerator {
             int index = Integer.parseInt(operand2.replaceAll("[\\[\\]]", ""));
             TripleManager.Triple t = triples.get(index);
             String op = t.getOperator();
-            // Si el operador no es  es una variable o constante
+            // Si el operador no es una variable o constante
             if (symbolTable.get(op) != null) {
                 String type = symbolTable.get(op).getType();
 
@@ -226,13 +223,12 @@ public class AsmCodeGenerator implements FileGenerator {
             sb.append(String.format("\tFSTP\t%s\n", operand1));
         }
 
-            return sb.toString();
+        return sb.toString();
     }
 
     private String handleComparison(String operand1, String operand2) {
-
         return loadOperand(operand1) +
-                (operand2.equals("0")? "\tFLD\t0\n": loadOperand(operand2)) +
+                (operand2.equals("0")? "\tFLDZ\n": loadOperand(operand2)) +
                 "\tFXCH\n\tFCOMP\n\tFSTSW\tAX\n\tSAHF\n\tFFREE\n";
 
     }

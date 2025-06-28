@@ -128,6 +128,7 @@ start with start_symbol;
 // Rules
 start_symbol        ::= program
                         {:
+                            SymbolTableGenerator.insertNonStringConstant("_"+"menosUno", "CTE_FLOAT","-1.0");  //para manejar los numeros negativos
                             asmGen.generate(TripleManager.getTriples(), SymbolTableGenerator.getTable());
                             System.out.println("End");
                         :}
@@ -429,7 +430,7 @@ constant            ::= INTEGER_CONSTANT:i
                         :} |
                         FLOAT_CONSTANT:f
                         {:
-                            RESULT = SymbolTableGenerator.getSymbol("_"+f);
+                            RESULT = SymbolTableGenerator.getSymbol("_" + f.replace(".","_"));
                         :}
                         ;
 
@@ -846,8 +847,7 @@ float_element       ::= IDENTIFIER:id
                         :} |
                         FLOAT_CONSTANT:f
                         {:
-
-                            RESULT = TripleManager.addTriple("_" + f, null, null);
+                            RESULT = TripleManager.addTriple("_" + f.replace(".","_"), null, null);
                         :} |
                         SUB IDENTIFIER:id
                         {:
@@ -865,6 +865,6 @@ float_element       ::= IDENTIFIER:id
                         :} |
                         SUB FLOAT_CONSTANT:f
                         {:
-                            RESULT = TripleManager.addTriple("-", "_" + f, null);
+                            RESULT = TripleManager.addTriple("-", "_" + f.replace(".","_"), null);
                         :}
                         ;

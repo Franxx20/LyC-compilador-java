@@ -154,7 +154,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                     throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
 
-                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "CTE_INTEGER");
+                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "CTE_INTEGER", value);
                                                 return symbol(ParserSym.INTEGER_CONSTANT, value);
                                             }
 
@@ -169,7 +169,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
 
-                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "CTE_FLOAT");
+                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext().replace(".","_"), "CTE_FLOAT", value);
                                                 return symbol(ParserSym.FLOAT_CONSTANT, value);
                                             }
 
