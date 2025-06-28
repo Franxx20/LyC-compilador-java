@@ -22,14 +22,17 @@ MAXTEXTSIZE equ 50
 	_1	dd	1
 	_0	dd	0
 	@total	dd	?
-	_4.0	dd	4.0
+	_2_3	dd	2.3
+	_99_	dd	99.
+	__9999	dd	.9999
+	_5_6	dd	5.6
 	_stringConstant8	db	"El perro tiene sueño", '$', 28 dup (?)
+	_menosUno	dd	-1.0
 	@sum	dd	?
 	_stringConstant7	db	"a es mas grande que b", '$', 27 dup (?)
 	_stringConstant6	db	"a es mas chico o igual a b", '$', 22 dup (?)
 	foo	db	MAXTEXTSIZE dup (?), '$'
 	_stringConstant5	db	"a es mas grande que b", '$', 27 dup (?)
-	_2.3	dd	2.3
 	_stringConstant4	db	"a es mas grande que b o c es mas grande que b", '$', 3 dup (?)
 	_stringConstant3	db	"a es mas grande que b y c es mas grande que b", '$', 3 dup (?)
 	_stringConstant2	db	"a no es mas grande que b", '$', 24 dup (?)
@@ -37,11 +40,9 @@ MAXTEXTSIZE equ 50
 	_stringConstant0	db	"hola buen dia", '$', 35 dup (?)
 	@mult	dd	?
 	@elem	dd	?
-	_5.6	dd	5.6
-	_.9999	dd	.9999
-	_99.	dd	99.
-	_99999.99	dd	99999.99
 	var	db	MAXTEXTSIZE dup (?), '$'
+	_99999_99	dd	99999.99
+	_4_0	dd	4.0
 	@parBit	dd	?
 	@count	dd	?
 	g	dd	?
@@ -75,13 +76,13 @@ start:
 	FILD	c
 	FADD
 	FSTP	d
-	FLD	-1
-	FLD	_99999.99
+	FLD	_menosUno
+	FLD	_99999_99
 	FMUL
 	FSTP	e
-	FLD	_99.
+	FLD	_99_
 	FSTP	f
-	FLD	_.9999
+	FLD	__9999
 	FSTP	g
 	MOV	SI,	OFFSET	_stringConstant0
 	MOV	SI,	OFFSET	var
@@ -165,9 +166,9 @@ IF_ELSE66:
 	DisplayString	_stringConstant6
 	newline 1
 END_IF69:
-	GetInt	a
-	GetInt	b
-	GetInt	c
+	GetInteger	a
+	GetInteger	b
+	GetInteger	c
 WHILE73:
 	FILD	a
 	FILD	b
@@ -228,18 +229,18 @@ END_WHILE84:
 	DisplayFloat	@reOrderX5	, 2
 	DisplayFloat	@reOrderX7	, 2
 	DisplayFloat	@reOrderX6	, 2
-	FLD	0
+	FLD	_0
 	FSTP	@count
-	FLD	0
+	FLD	_0
 	FSTP	@sum
-	FLD	0
+	FLD	_0
 	FSTP	@mult
-	FLD	-1
-	FLD	_4.0
+	FLD	_menosUno
+	FLD	_4_0
 	FMUL
 	FSTP	@elem
 	FLD	@elem
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
@@ -247,18 +248,18 @@ END_WHILE84:
 	FFREE
 	JAE	NEG_FUNC_END_IF144
 	FLD	@count
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
 	SAHF
 	FFREE
 	JNE	NEG_FUNC_ELSE136
-	FLD	1
+	FLD	_1
 	FSTP	@parBit
 	JMP	NEG_FUNC_END_IF138
 NEG_FUNC_ELSE136:
-	FLD	0
+	FLD	_0
 	FSTP	@parBit
 NEG_FUNC_END_IF138:
 	FLD	@parBit
@@ -272,10 +273,10 @@ NEG_FUNC_END_IF138:
 	FMUL
 	FSTP	@mult
 NEG_FUNC_END_IF144:
-	FLD	_2.3
+	FLD	_2_3
 	FSTP	@elem
 	FLD	@elem
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
@@ -283,17 +284,17 @@ NEG_FUNC_END_IF144:
 	FFREE
 	JAE	NEG_FUNC_END_IF161
 	FLD	@count
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
 	SAHF
 	FFREE
 	JNE	NEG_FUNC_ELSE154
-	FLD	1
+	FLD	_1
 	FSTP	@parBit
 	JMP	NEG_FUNC_END_IF155
-	FLD	0
+	FLD	_0
 	FSTP	@parBit
 NEG_FUNC_ELSE154:
 NEG_FUNC_END_IF155:
@@ -311,7 +312,7 @@ NEG_FUNC_END_IF161:
 	FLD	f
 	FSTP	@elem
 	FLD	@elem
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
@@ -319,17 +320,17 @@ NEG_FUNC_END_IF161:
 	FFREE
 	JAE	NEG_FUNC_END_IF178
 	FLD	@count
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
 	SAHF
 	FFREE
 	JNE	NEG_FUNC_ELSE171
-	FLD	1
+	FLD	_1
 	FSTP	@parBit
 	JMP	NEG_FUNC_END_IF172
-	FLD	0
+	FLD	_0
 	FSTP	@parBit
 NEG_FUNC_ELSE171:
 NEG_FUNC_END_IF172:
@@ -344,10 +345,10 @@ NEG_FUNC_END_IF172:
 	FMUL
 	FSTP	@mult
 NEG_FUNC_END_IF178:
-	FLD	_5.6
+	FLD	_5_6
 	FSTP	@elem
 	FLD	@elem
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
@@ -355,17 +356,17 @@ NEG_FUNC_END_IF178:
 	FFREE
 	JAE	NEG_FUNC_END_IF195
 	FLD	@count
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
 	SAHF
 	FFREE
 	JNE	NEG_FUNC_ELSE188
-	FLD	1
+	FLD	_1
 	FSTP	@parBit
 	JMP	NEG_FUNC_END_IF189
-	FLD	0
+	FLD	_0
 	FSTP	@parBit
 NEG_FUNC_ELSE188:
 NEG_FUNC_END_IF189:
@@ -381,7 +382,7 @@ NEG_FUNC_END_IF189:
 	FSTP	@mult
 NEG_FUNC_END_IF195:
 	FLD	@count
-	FLD	0
+	FLDZ
 	FXCH
 	FCOMP
 	FSTSW	AX
