@@ -208,12 +208,13 @@ selection           ::= IF OPEN_BRACKET condition CLOSE_BRACKET OPEN_CURLY_BRACK
                         {:
                             // Si fue falso salta al else
                             int falseIdx = jumpStack.pop();
-                            int elseIdx = TripleManager.addTriple("ET", "IF_ELSE", null);
-                            TripleManager.patchTriple(falseIdx, elseIdx);
 
                             // Si fue verdadero se evita el else
                             int biIdx = TripleManager.addTriple("BI", "GOTO", null);
                             jumpStack.push(biIdx);
+
+                            int elseIdx = TripleManager.addTriple("ET", "IF_ELSE", null);
+                            TripleManager.patchTriple(falseIdx, elseIdx);
                         :}
                         ELSE OPEN_CURLY_BRACKET program CLOSE_CURLY_BRACKET
                         {:
@@ -700,7 +701,7 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET
                         {:
                             TripleManager.addTriple("=", "@count", "_" + 0);
                             TripleManager.addTriple("=", "@sum", "_" + 0);
-                            TripleManager.addTriple("=", "@mult", "_" + 0);
+                            TripleManager.addTriple("=", "@mult", "_" + 1);
 
                             SymbolTableGenerator.insertNonStringConstant("_" + 0, "CTE_INTEGER", "0");
                             SymbolTableGenerator.insertNonStringConstant("_" + 1, "CTE_INTEGER", "1");
@@ -810,9 +811,9 @@ float_list          ::= float_element:f
                             TripleManager.addTriple("=", "@parBit", "_" + 1);
                             int biIdx = TripleManager.addTriple("BI", "GOTO", null);
 
+                            int elseIdx = TripleManager.addTriple("ET", "NEG_FUNC_ELSE", null);
                             TripleManager.addTriple("=", "@parBit", "_" + 0);
 
-                            int elseIdx = TripleManager.addTriple("ET", "NEG_FUNC_ELSE", null);
                             TripleManager.patchTriple(falseIdx2, elseIdx);
 
                             int endIdx = TripleManager.addTriple("ET", "NEG_FUNC_END_IF", null);
