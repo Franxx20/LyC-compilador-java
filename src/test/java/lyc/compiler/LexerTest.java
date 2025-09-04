@@ -74,6 +74,7 @@ public class LexerTest {
     });
   }
 
+
   @Test
   public void invalidNegativeFloatConstantValue() {
     assertThrows(InvalidFloatException.class, () -> {

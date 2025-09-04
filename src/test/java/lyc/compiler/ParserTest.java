@@ -22,19 +22,19 @@ public class ParserTest {
         compilationSuccessful(readFromFile("test.txt"));
     }
 
-    @Disabled
+//    @Disabled
     @Test
     public void reorderTest() throws Exception {
         compilationSuccessful(readFromFile("reorder.txt"));
     }
 
-    @Disabled
+//    @Disabled
     @Test
     public void negativeCalculationTest() throws Exception {
         compilationSuccessful(readFromFile("negativeCalculation.txt"));
     }
 
-    @Disabled
+//    @Disabled
     @Test
     public void assignmentWithExpression() throws Exception {
         compilationSuccessful("c=d*(e-21)/4");

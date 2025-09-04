@@ -78,6 +78,7 @@ Not = "not"
 
 ReorderFunction = "reorder"
 NegativeCalculationFunction = "negativeCalculation"
+ConvDate = "convDate"
 
 Letter = [a-zA-Z]
 Digit = [0-9]
@@ -139,6 +140,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
 
   {ReorderFunction}                         { return symbol(ParserSym.REORDER_FUNCTION); }
   {NegativeCalculationFunction}             { return symbol(ParserSym.NEGATIVE_CALCULATION_FUNCTION); }
+  {ConvDate}                                { return symbol(ParserSym.CONV_DATE); }
 
   /* identifiers */
   {Identifier}                              {

@@ -86,6 +86,7 @@ terminal NOT;
 
 terminal REORDER_FUNCTION;
 terminal NEGATIVE_CALCULATION_FUNCTION;
+terminal CONV_DATE;
 
 terminal String INTEGER_CONSTANT;
 terminal String FLOAT_CONSTANT;
@@ -116,8 +117,11 @@ non terminal String var_type;
 non terminal function;
 non terminal negative_function;
 non terminal reorder_function;
+non terminal conv_date_function;
 non terminal arguments;
 non terminal Integer arguments_list;
+non terminal conv_date_arguments;
+non terminal Integer conv_date_arguments_list;
 non terminal float_list;
 non terminal float_element;
 non terminal write_args;
@@ -175,6 +179,10 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
                                 throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
                             }
                             System.out.println("assignment = id = negative_function");
+                        :} |
+                        IDENTIFIER:id ASSIG conv_date_function
+                        {:
+                            System.out.println("assigment = id = conv_date_function");
                         :} |
                         IDENTIFIER:id ASSIG STRING_CONSTANT:sc
                         {:
@@ -623,6 +631,16 @@ reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET
                             System.out.println("reorder_function = reorder ( arguments )");
                         :}
                         ;
+
+conv_date_function  ::= CONV_DATE OPEN_BRACKET
+                    {:
+                        System.out.println("convdate open bracket");
+                    :}
+                    conv_date_arguments CLOSE_BRACKET
+                    {:
+                        System.out.println("conv_date_function = convDate ( arguments )");
+                    :}
+                    ;
 
 arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT:dir COMMA INTEGER_CONSTANT:pos
                         {:
