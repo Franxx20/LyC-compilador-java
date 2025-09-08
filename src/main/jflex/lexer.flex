@@ -85,7 +85,7 @@ Digit = [0-9]
 
 Identifier = {Letter} ({Letter}|{Digit})*
 
-IntegerConstant = 0 | [1-9]{Digit}*
+IntegerConstant = 0 | [0-9]{Digit}*
 FloatConstant = {Digit}+\.{Digit}* | \.{Digit}+
 StringConstant = \"(.*)\"
 

@@ -7,8 +7,14 @@ import java.util.List;
 import java.util.Stack;
 import lyc.compiler.files.SymbolTableGenerator;
 import lyc.compiler.files.TripleManager;
+import lyc.compiler.files.DateValidator;
 import lyc.compiler.model.InvalidTypeException;
+import lyc.compiler.model.InvalidDateException;
 import lyc.compiler.model.UndefinedVariableException;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 class Parser;
 
@@ -121,7 +127,6 @@ non terminal conv_date_function;
 non terminal arguments;
 non terminal Integer arguments_list;
 non terminal conv_date_arguments;
-non terminal Integer conv_date_arguments_list;
 non terminal float_list;
 non terminal float_element;
 non terminal write_args;
@@ -182,7 +187,17 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
                         :} |
                         IDENTIFIER:id ASSIG conv_date_function
                         {:
-                            System.out.println("assigment = id = conv_date_function");
+                            SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
+                            if(sym != null) {
+                                if(sym.getType() == "int") {
+                                    TripleManager.addTriple("=", id, "@dateResult");
+                                } else {
+                                    throw new InvalidTypeException("variable de asignacion tiene que ser del tipo int pero es del tipo " + sym.getType());
+                                }
+                            } else {
+                                throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+                            System.out.println("assignment = " + id + " = conv_date_function");
                         :} |
                         IDENTIFIER:id ASSIG STRING_CONSTANT:sc
                         {:
@@ -632,15 +647,6 @@ reorder_function    ::=  REORDER_FUNCTION OPEN_BRACKET
                         :}
                         ;
 
-conv_date_function  ::= CONV_DATE OPEN_BRACKET
-                    {:
-                        System.out.println("convdate open bracket");
-                    :}
-                    conv_date_arguments CLOSE_BRACKET
-                    {:
-                        System.out.println("conv_date_function = convDate ( arguments )");
-                    :}
-                    ;
 
 arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET COMMA INTEGER_CONSTANT:dir COMMA INTEGER_CONSTANT:pos
                         {:
@@ -694,6 +700,66 @@ arguments           ::= OPEN_SQUARE_BRACKET arguments_list CLOSE_SQUARE_BRACKET 
 
                             reorderList.clear();
                             System.out.println("arguments = [arguments_list], integer_constant, integer_constant");
+                        :}
+                        ;
+
+conv_date_function  ::= CONV_DATE OPEN_BRACKET conv_date_arguments CLOSE_BRACKET
+                    {:
+                        System.out.println("conv_date_function = convDate ( conv_date_arguments )");
+                    :}
+                    ;
+
+conv_date_arguments ::= INTEGER_CONSTANT:day SUB INTEGER_CONSTANT:month SUB INTEGER_CONSTANT:year
+                        {:
+
+                            if (DateValidator.isValidDate(day, month, year)){
+                                SymbolTableGenerator.insertVariable("@day", "int");
+                                SymbolTableGenerator.insertVariable("@month", "int");
+                                SymbolTableGenerator.insertVariable("@year", "int");
+
+                                TripleManager.addTriple("=", "@day", "_" + day);
+                                TripleManager.addTriple("=", "@month", "_" + month);
+                                TripleManager.addTriple("=", "@year", "_" + year);
+
+                                TripleManager.addTriple("*", "@year", "_10000");
+                                SymbolTableGenerator.insertNonStringConstant("_10000", "CTE_INTEGER", "10000");
+                                int yearIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+
+                                TripleManager.addTriple("*", "@month", "_100");
+                                SymbolTableGenerator.insertNonStringConstant("_100", "CTE_INTEGER", "100");
+                                TripleManager.addTriple("+", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+                                int monthIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+
+                                TripleManager.addTriple("+", "@dateResult", "@day");
+                                TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+
+                                System.out.println("conv_date_arguments = day-month-year: " + day + "-" + month + "-" + year);
+                            }
+                            else {
+                                throw new InvalidDateException("Invalid Date: " + day + "-" + month + "-" + year);
+                            }
+
+
+
+//                            SymbolTableGenerator.insertVariable("@dateResult", "int");
+
+//
+//                            // Calculate a simple date value (YYYYMMDD format)
+//                            // First multiply year by 10000
+//                            TripleManager.addTriple("*", "@year", "_10000");
+//                            SymbolTableGenerator.insertNonStringConstant("_10000", "CTE_INTEGER", "10000");
+//                            int yearIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+//
+//                            // Then multiply month by 100 and add
+//                            TripleManager.addTriple("*", "@month", "_100");
+//                            SymbolTableGenerator.insertNonStringConstant("_100", "CTE_INTEGER", "100");
+//                            TripleManager.addTriple("+", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+//                            int monthIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+//
+//                            // Finally add day
+//                            TripleManager.addTriple("+", "@dateResult", "@day");
+//                            TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+//
                         :}
                         ;
 
@@ -890,3 +956,4 @@ float_element       ::= IDENTIFIER:id
                             RESULT = TripleManager.addTriple("-", "_" + f.replace(".","_"), null);
                         :}
                         ;
+

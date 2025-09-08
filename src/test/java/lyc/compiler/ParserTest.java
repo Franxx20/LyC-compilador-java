@@ -17,24 +17,30 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ParserTest {
 
+    @Disabled
     @Test
     public void testAll() throws Exception {
         compilationSuccessful(readFromFile("test.txt"));
     }
 
-//    @Disabled
+    @Disabled
     @Test
     public void reorderTest() throws Exception {
         compilationSuccessful(readFromFile("reorder.txt"));
     }
 
-//    @Disabled
+    @Disabled
     @Test
     public void negativeCalculationTest() throws Exception {
         compilationSuccessful(readFromFile("negativeCalculation.txt"));
     }
 
-//    @Disabled
+    @Test
+    public void convDateTest() throws Exception {
+        compilationSuccessful(readFromFile("convDate.txt"));
+    }
+
+    @Disabled
     @Test
     public void assignmentWithExpression() throws Exception {
         compilationSuccessful("c=d*(e-21)/4");

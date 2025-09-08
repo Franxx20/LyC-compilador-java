@@ -1,1 +1,4 @@
+init {
+    x : int
+}
 x = convDate(21-08-2025)
