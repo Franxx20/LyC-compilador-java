@@ -68,6 +68,7 @@ Init = "init"
 IntType = "int"
 FloatType = "float"
 StringType = "string"
+DateConvertedType = "DateConverted"
 
 Read = "read"
 Write = "write"
@@ -130,6 +131,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
   {IntType}                                 { return symbol(ParserSym.TYPE_INT); }
   {FloatType}                               { return symbol(ParserSym.TYPE_FLOAT); }
   {StringType}                              { return symbol(ParserSym.TYPE_STRING); }
+  {DateConvertedType}                       { return symbol(ParserSym.TYPE_DATE_CONVERTED); }
 
   {And}                                     { return symbol(ParserSym.AND); }
   {Or}                                      { return symbol(ParserSym.OR); }
@@ -156,7 +158,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                     throw new InvalidIntegerException("Invalid integer: " + value);
                                                 }
 
-                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext(), "CTE_INTEGER", value);
+                                                SymbolTableGenerator.insertConstant("_" + yytext(), "CTE_INTEGER", value);
                                                 return symbol(ParserSym.INTEGER_CONSTANT, value);
                                             }
 
@@ -171,7 +173,7 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                   throw new InvalidFloatException("Invalid float: " + value);
                                                 }
 
-                                                SymbolTableGenerator.insertNonStringConstant("_" + yytext().replace(".","_"), "CTE_FLOAT", value);
+                                                SymbolTableGenerator.insertConstant("_" + yytext().replace(".","_"), "CTE_FLOAT", value);
                                                 return symbol(ParserSym.FLOAT_CONSTANT, value);
                                             }
 
@@ -180,7 +182,8 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
                                                     throw new InvalidLengthException("String lenght is beyond maximum lenght for: " + yytext());
                                                 } else {
                                                     String generatedName = "_stringConstant" + stringConstantCounter++;
-                                                    SymbolTableGenerator.insertStringConstant(generatedName, "CTE_STRING", yytext(), yylength());
+//                                                    SymbolTableGenerator.insertStringConstant(generatedName, "CTE_STRING", yytext(), yylength());
+                                                    SymbolTableGenerator.insertConstant(generatedName, "CTE_STRING", yytext());
 
                                                     return symbol(ParserSym.STRING_CONSTANT, generatedName);
                                                 }

@@ -6,6 +6,10 @@ import java.util.Date;
 
 public class DateValidator {
     public static Boolean isValidDate(String day, String month, String year) {
+        if (day.length() > 2 || month.length() > 2 || year.length() > 4) {
+            System.out.println("Invalid date format.");
+            return false;
+        }
         String date = day + "-" + month + "-" + year;
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");

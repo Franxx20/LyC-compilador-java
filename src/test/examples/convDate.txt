@@ -1,4 +1,4 @@
 init {
-    x : int
+    x : DateConverted
 }
 x = convDate(21-08-2025)

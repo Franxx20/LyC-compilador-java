@@ -76,7 +76,6 @@ public class ParserTest {
         compilationSuccessful(readFromFile("comment.txt"));
     }
 
-    @Disabled
     @Test
     void init() throws Exception {
         compilationSuccessful(readFromFile("init.txt"));

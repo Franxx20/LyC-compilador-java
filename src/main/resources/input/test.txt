@@ -1,5 +1,5 @@
 init {
-    dateC: int
+    dateC: DateConverted
 }
-
-dateC = convDate(21-08-2025)
+dateC = convDate(01-02-2025)
+read(dateC)

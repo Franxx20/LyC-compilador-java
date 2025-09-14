@@ -56,13 +56,12 @@ public class SymbolTableGenerator implements FileGenerator{
         }
 
         public String getType(){
-            String result = switch (this.type) {
+            return switch (this.type) {
                 case "CTE_STRING" -> "string";
                 case "CTE_FLOAT" -> "float";
                 case "CTE_INTEGER" -> "int";
                 default -> this.type;
             };
-            return result;
         }
 
         public String getValue() { return value; }
@@ -86,6 +85,14 @@ public class SymbolTableGenerator implements FileGenerator{
         }
     }
 
+    static public void insertConstant(String name, String type, String value) {
+        if (type.equals("string")) {
+            insertStringConstant(name, type, value, value.length());
+        } else {
+            insertNonStringConstant(name, type, value);
+        }
+    }
+//  TODO convert this to one single call
     static public void insertNonStringConstant(String name, String type, String value) {
         symbolTable.put(name, new SymbolT(name, type, value));
     }
@@ -93,6 +100,7 @@ public class SymbolTableGenerator implements FileGenerator{
     static public void insertStringConstant(String name, String type, String value, int symbolSize) {
         symbolTable.put(name, new SymbolT(name, type, value, symbolSize));
     }
+
 
     static public void insertVariable(String name, String type) throws DuplicatedVariableDefinitionException {
         _insertVariable(name, type);

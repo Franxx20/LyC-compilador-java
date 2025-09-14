@@ -82,6 +82,7 @@ terminal INIT;
 terminal TYPE_INT;
 terminal TYPE_FLOAT;
 terminal TYPE_STRING;
+terminal TYPE_DATE_CONVERTED;
 
 terminal READ;
 terminal WRITE;
@@ -188,14 +189,14 @@ assignment          ::= IDENTIFIER:id ASSIG expression:e
                         IDENTIFIER:id ASSIG conv_date_function
                         {:
                             SymbolTableGenerator.SymbolT sym = SymbolTableGenerator.getSymbol(id);
-                            if(sym != null) {
-                                if(sym.getType() == "int") {
-                                    TripleManager.addTriple("=", id, "@dateResult");
-                                } else {
-                                    throw new InvalidTypeException("variable de asignacion tiene que ser del tipo int pero es del tipo " + sym.getType());
-                                }
-                            } else {
+                            if (sym == null){
                                 throw new UndefinedVariableException("La variable: "+ id + " no ha sido definida.");
+                            }
+
+                            if(sym.getType() == "DateConverted") {
+                                TripleManager.addTriple("=", id, "@dateResult");
+                            } else {
+                                throw new InvalidTypeException("variable de asignacion tiene que ser del tipo DateConverted pero es del tipo " + sym.getType());
                             }
                             System.out.println("assignment = " + id + " = conv_date_function");
                         :} |
@@ -319,8 +320,13 @@ var_type            ::= TYPE_INT
                         {:
                             RESULT = "string";
                             System.out.println("string");
+                        :} |
+                        TYPE_DATE_CONVERTED
+                        {:
+                            RESULT = "DateConverted";
+                            System.out.println("DateConverted");
                         :}
-                        ;
+                         ;
 
 expression          ::= expression:e PLUS term:t
                         {:
@@ -738,28 +744,6 @@ conv_date_arguments ::= INTEGER_CONSTANT:day SUB INTEGER_CONSTANT:month SUB INTE
                             else {
                                 throw new InvalidDateException("Invalid Date: " + day + "-" + month + "-" + year);
                             }
-
-
-
-//                            SymbolTableGenerator.insertVariable("@dateResult", "int");
-
-//
-//                            // Calculate a simple date value (YYYYMMDD format)
-//                            // First multiply year by 10000
-//                            TripleManager.addTriple("*", "@year", "_10000");
-//                            SymbolTableGenerator.insertNonStringConstant("_10000", "CTE_INTEGER", "10000");
-//                            int yearIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
-//
-//                            // Then multiply month by 100 and add
-//                            TripleManager.addTriple("*", "@month", "_100");
-//                            SymbolTableGenerator.insertNonStringConstant("_100", "CTE_INTEGER", "100");
-//                            TripleManager.addTriple("+", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
-//                            int monthIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
-//
-//                            // Finally add day
-//                            TripleManager.addTriple("+", "@dateResult", "@day");
-//                            TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
-//
                         :}
                         ;
 

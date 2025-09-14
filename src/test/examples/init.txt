@@ -2,4 +2,5 @@ init {
     a1, b1 : float
     variable1 : int
     p1, p2, p3 : string
+    date123 : DateConverted
 }
