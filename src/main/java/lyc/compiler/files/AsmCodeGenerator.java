@@ -49,24 +49,27 @@ public class AsmCodeGenerator implements FileGenerator {
             String value = symbol.getValue();
             int size = symbol.getSymbolSize();
 
-            if (type.equals("string")) {
-                if (value == null){
-                    sb.append(String.format("\t%s\tdb\tMAXTEXTSIZE dup (?), '$'\n", name));
+            switch (type) {
+                case "string" -> {
+                    if (value == null) {
+                        sb.append(String.format("\t%s\tdb\tMAXTEXTSIZE dup (?), '$'\n", name));
+                    } else {
+                        sb.append(String.format("\t%s\tdb\t%s, '$', %d dup (?)\n", name, value, 50 - size));
+                    }
                 }
-                else{
-                    sb.append(String.format("\t%s\tdb\t%s, '$', %d dup (?)\n", name, value, 50-size));
+                case "float" -> {
+                    if (value != null) {
+                        sb.append(String.format("\t%s\tdd\t%s\n", name, value));
+                    } else {
+                        sb.append(String.format("\t%s\tdd\t?\n", name));
+                    }
                 }
-            } else if (type.equals("float")) {
-                if (value != null) {
-                    sb.append(String.format("\t%s\tdd\t%s\n", name, value));
-                } else {
-                    sb.append(String.format("\t%s\tdd\t?\n", name));
-                }
-            } else if (type.equals("int")) {
-                if (value != null) {
-                    sb.append(String.format("\t%s\tdd\t%s\n", name, value + ".0"));
-                } else {
-                    sb.append(String.format("\t%s\tdd\t?\n", name));
+                case "int" -> {
+                    if (value != null) {
+                        sb.append(String.format("\t%s\tdd\t%s\n", name, value + ".0"));
+                    } else {
+                        sb.append(String.format("\t%s\tdd\t?\n", name));
+                    }
                 }
             }
         }
@@ -251,6 +254,7 @@ public class AsmCodeGenerator implements FileGenerator {
             case "string" -> sb.append(String.format("\tGetString\t%s\n", operand1));
             case "int" -> sb.append(String.format("\tGetFloat\t%s\n", operand1));
             case "float" -> sb.append(String.format("\tGetFloat\t%s\n", operand1));
+            case "DateConverted" -> sb.append(String.format("\tGetDateConverted\t%s\n", operand1));
         }
 
         return sb.toString();
@@ -266,6 +270,7 @@ public class AsmCodeGenerator implements FileGenerator {
             case "string" -> sb.append(String.format("\tDisplayString\t%s\n", operand));
             case "int" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
             case "float" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
+            case "DateConverted" -> sb.append(String.format("\tDisplayDateConverted\t%s\n", operand));
         }
         sb.append("\tnewline 1\n");
         return sb.toString();

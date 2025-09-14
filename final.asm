@@ -8,16 +8,15 @@ include macros2.asm
 MAXTEXTSIZE equ 50
 
 .DATA
-	_21	dd	21.0
 	_2025	dd	2025.0
 	_menosUno	dd	-1.0
 	_100	dd	100.0
 	@month	dd	?
 	_10000	dd	10000.0
 	@day	dd	?
-	_08	dd	08.0
 	@year	dd	?
-	dateC	dd	?
+	_02	dd	02.0
+	_01	dd	01.0
 .CODE
 
 start:
@@ -25,10 +24,10 @@ start:
 	MOV DS,AX
 	MOV ES,AX
 
-	MOV	SI,	OFFSET	_21
+	MOV	SI,	OFFSET	_01
 	MOV	SI,	OFFSET	@day
 	STRCPY
-	MOV	SI,	OFFSET	_08
+	MOV	SI,	OFFSET	_02
 	MOV	SI,	OFFSET	@month
 	STRCPY
 	MOV	SI,	OFFSET	_2025

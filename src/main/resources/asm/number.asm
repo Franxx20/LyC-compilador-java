@@ -31,6 +31,15 @@ endm
 
 ;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+GetDateConverted         macro  number
+;gets an date formated integer and stores it in a double word sized variable
+
+                lea    bx, number
+                call    atoI
+endm
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 DisplayFloat              macro  Number, places
 ;displays a floating point double word sized variable on the screen 
 
@@ -45,6 +54,16 @@ endm
 DisplayInteger            macro  number
 ;displays an double word sized variable on the screen
                             
+                lea    bx, number
+                call    itoa
+
+endm
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+DisplayDateConverted            macro  number
+;displays an double word sized variable on the screen
+
                 lea    bx, number
                 call    itoa
 
