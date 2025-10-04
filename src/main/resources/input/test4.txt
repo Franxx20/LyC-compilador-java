@@ -1,0 +1,5 @@
+init {
+    date: DateConverted
+}
+date = convDate(21-08-2025)
+write(date)
