@@ -719,25 +719,27 @@ conv_date_arguments ::= INTEGER_CONSTANT:day SUB INTEGER_CONSTANT:month SUB INTE
                         {:
 
                             if (DateValidator.isValidDate(day, month, year)){
-                                SymbolTableGenerator.insertVariable("@day", "int");
-                                SymbolTableGenerator.insertVariable("@month", "int");
-                                SymbolTableGenerator.insertVariable("@year", "int");
+//                                SymbolTableGenerator.insertVariable("@day", "int");
+//                                SymbolTableGenerator.insertVariable("@month", "int");
+//                                SymbolTableGenerator.insertVariable("@year", "int");
+//
+//                                TripleManager.addTriple("=", "@day", "_" + day);
+//                                TripleManager.addTriple("=", "@month", "_" + month);
+//                                TripleManager.addTriple("=", "@year", "_" + year);
 
-                                TripleManager.addTriple("=", "@day", "_" + day);
-                                TripleManager.addTriple("=", "@month", "_" + month);
-                                TripleManager.addTriple("=", "@year", "_" + year);
+                                int result = Integer.parseInt(year) * 10000 + Integer.parseInt(month) * 100 + Integer.parseInt(day);
 
-                                TripleManager.addTriple("*", "@year", "_10000");
-                                SymbolTableGenerator.insertNonStringConstant("_10000", "CTE_INTEGER", "10000");
-                                int yearIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+//                                TripleManager.addTriple("*", "@year", "_10000");
+//                                SymbolTableGenerator.insertNonStringConstant("_10000", "CTE_INTEGER", "10000");
+//                                int yearIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
 
-                                TripleManager.addTriple("*", "@month", "_100");
-                                SymbolTableGenerator.insertNonStringConstant("_100", "CTE_INTEGER", "100");
-                                TripleManager.addTriple("+", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
-                                int monthIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+//                                TripleManager.addTriple("*", "@month", "_100");
+//                                SymbolTableGenerator.insertNonStringConstant("_100", "CTE_INTEGER", "100");
+//                                TripleManager.addTriple("+", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+//                                int monthIdx = TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
 
-                                TripleManager.addTriple("+", "@dateResult", "@day");
-                                TripleManager.addTriple("=", "@dateResult", "[" + TripleManager.getLastIndex() + "]");
+//                                TripleManager.addTriple("+", "@dateResult", "@day");
+                                TripleManager.addTriple("=", "@dateResult", "_" + result);
 
                                 System.out.println("conv_date_arguments = day-month-year: " + day + "-" + month + "-" + year);
                             }
