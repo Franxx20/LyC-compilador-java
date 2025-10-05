@@ -1,5 +1,16 @@
 init {
     date2: DateConverted
+    inter: int
+    flo: float
+    stri: string
 }
 date2 = convDate(21-08-2025)
 write(date2)
+
+inter = -3
+flo = -0.34
+stri = "asdfasdfa"
+write(inter)
+write(flo)
+write(stri)
+

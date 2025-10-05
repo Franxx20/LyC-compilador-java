@@ -74,6 +74,10 @@ public class AsmCodeGenerator implements FileGenerator {
                 }
             }
         }
+        
+        // Agregar buffers temporales para conversión de DateConverted a string
+        sb.append("\t@dateTemp\tdd\t?\t; Temporal para conversión de fecha\n");
+        sb.append("\t@dateStr\tdb\t10 dup (?), '$'\t; Buffer para fecha (8 dígitos + terminador)\n");
 
         return sb.toString();
     }
@@ -99,8 +103,12 @@ public class AsmCodeGenerator implements FileGenerator {
                     break;
                 case "-":
                     code.append(handleArithmetic(operand1, operand2));
-                    if (!operand2.equals("_"))
+                    if (!operand2.equals("_")) {
                         code.append("\tFSUB\n");
+                    } else {
+                        // Número negativo: cambiar signo del operando1 cargado
+                        code.append("\tFCHS\n");
+                    }
                     break;
                 case "*":
                     code.append(handleArithmetic(operand1, operand2));
@@ -186,15 +194,8 @@ public class AsmCodeGenerator implements FileGenerator {
             // Lógica para operandos como @sum y @mult
             sb.append(String.format("\tFLD\t%s\n", operand));
         } else if (operand.startsWith("_") && operand.length() > 1) {
-            // Verificar si es una constante de fecha que NO debe multiplicarse por -1
-            if (operand.startsWith("_mult_year") || operand.startsWith("_mult_month")) {
-                // Estas son constantes de fecha, cargar directamente
-                sb.append(String.format("\tFLD\t%s\n", operand));
-            } else {
-                System.out.println("operando supuesto negativo " + operand);
-                // Este puede pasar cuando hay un numero negativo, ej: [16] = (-, _99999.99, _)
-                sb.append(String.format("\tFLD\t_menosUno\n\tFLD\t%s\n\tFMUL\n", operand, operand));
-            }
+            // Cargar constante directamente (ya no necesitamos lógica especial para negativos)
+            sb.append(String.format("\tFLD\t%s\n", operand));
         }
 
         return sb.toString();
@@ -282,7 +283,27 @@ public class AsmCodeGenerator implements FileGenerator {
 
         switch (type) {
             case "string" -> sb.append(String.format("\tDisplayString\t%s\n", operand));
-            case "int", "float", "DateConverted" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
+            case "DateConverted" -> {
+                // Convertir el número flotante de fecha a string directamente
+                sb.append("\t; Convertir DateConverted a string\n");
+                sb.append(String.format("\tfld\t%s\n", operand));
+                sb.append("\tfistp\tdword ptr @dateTemp\t; Convertir a entero\n");
+                sb.append("\tmov\teax, dword ptr @dateTemp\n");
+                sb.append("\tlea\tdi, @dateStr\t; Buffer para el string\n");
+                sb.append("\tmov\tcx, 8\t; 8 dígitos YYYYMMDD\n");
+                sb.append("\tmov\tebx, 10\n");
+                sb.append("\tadd\tdi, 7\t; Empezar desde el final\n");
+                sb.append("@@convertLoop:\n");
+                sb.append("\txor\tedx, edx\n");
+                sb.append("\tdiv\tebx\t; Dividir por 10\n");
+                sb.append("\tadd\tdl, '0'\t; Convertir a ASCII\n");
+                sb.append("\tmov\t[di], dl\n");
+                sb.append("\tdec\tdi\n");
+                sb.append("\tloop\t@@convertLoop\n");
+                sb.append("\tmov\tbyte ptr [di+9], '$'\t; Terminador\n");
+                sb.append("\tDisplayString\t@dateStr\n");
+            }
+            case "int", "float" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
         }
         sb.append("\tnewline 1\n");
         return sb.toString();

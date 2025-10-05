@@ -1,0 +1,11 @@
+init {
+    inter: int
+    flo: float
+    stri: string
+}
+inter = 3
+flo = 0.34
+stri = "asdfasdfa"
+write(inter)
+write(flo)
+write(stri)
