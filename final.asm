@@ -1,6 +1,8 @@
 include number.asm
 include macros2.asm
 
+include macros.asm
+
 .MODEL LARGE
 .386
 .STACK 200h
@@ -8,16 +10,16 @@ include macros2.asm
 MAXTEXTSIZE equ 50
 
 .DATA
+	_mult_month	dd	100.0
 	_21	dd	21.0
+	_mult_year	dd	10000.0
+	date2	dd	?
 	_2025	dd	2025.0
-	_menosUno	dd	-1.0
-	_100	dd	100.0
 	@month	dd	?
-	_10000	dd	10000.0
 	@day	dd	?
 	_08	dd	08.0
 	@year	dd	?
-	dateC	dd	?
+	@dateResult	dd	?
 .CODE
 
 start:
@@ -25,35 +27,24 @@ start:
 	MOV DS,AX
 	MOV ES,AX
 
-	MOV	SI,	OFFSET	_21
-	MOV	SI,	OFFSET	@day
-	STRCPY
-	MOV	SI,	OFFSET	_08
-	MOV	SI,	OFFSET	@month
-	STRCPY
-	MOV	SI,	OFFSET	_2025
-	MOV	SI,	OFFSET	@year
-	STRCPY
 	FLD	@year
-	FLD	_menosUno
-	FLD	_10000
+	FLD	_mult_year
 	FMUL
-	FMUL
-	FSTP	@dateResult
+	FSTP @dateResult
 	FLD	@month
-	FLD	_menosUno
-	FLD	_100
-	FMUL
+	FLD	_mult_month
 	FMUL
 	FLD	@dateResult
 	FADD
-	FSTP	@dateResult
+	FSTP @dateResult
 	FLD	@dateResult
 	FLD	@day
 	FADD
-	FSTP	@dateResult
+	FSTP @dateResult
 	FLD	@dateResult
-	FSTP	dateC
+	FSTP	date2
+	DisplayFloat	date2	, 2
+	newline 1
 	MOV EAX, 4C00h
 	INT 21h
 

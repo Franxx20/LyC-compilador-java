@@ -1,5 +1,5 @@
 init {
-    date: DateConverted
+    date2: DateConverted
 }
-date = convDate(21-08-2025)
-write(date)
+date2 = convDate(21-08-2025)
+write(date2)

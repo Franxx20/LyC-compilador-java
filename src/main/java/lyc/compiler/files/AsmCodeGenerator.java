@@ -32,6 +32,7 @@ public class AsmCodeGenerator implements FileGenerator {
     private String generateHeader() {
         return "include number.asm\n"
                 + "include macros2.asm\n\n"
+                + "include macros.asm\n\n"
                 + ".MODEL LARGE\n"
                 + ".386\n"
                 + ".STACK 200h\n\n"
@@ -49,24 +50,27 @@ public class AsmCodeGenerator implements FileGenerator {
             String value = symbol.getValue();
             int size = symbol.getSymbolSize();
 
-            if (type.equals("string")) {
-                if (value == null){
-                    sb.append(String.format("\t%s\tdb\tMAXTEXTSIZE dup (?), '$'\n", name));
+            switch (type) {
+                case "string" -> {
+                    if (value == null) {
+                        sb.append(String.format("\t%s\tdb\tMAXTEXTSIZE dup (?), '$'\n", name));
+                    } else {
+                        sb.append(String.format("\t%s\tdb\t%s, '$', %d dup (?)\n", name, value, 50 - size));
+                    }
                 }
-                else{
-                    sb.append(String.format("\t%s\tdb\t%s, '$', %d dup (?)\n", name, value, 50-size));
+                case "float" -> {
+                    if (value != null) {
+                        sb.append(String.format("\t%s\tdd\t%s\n", name, value));
+                    } else {
+                        sb.append(String.format("\t%s\tdd\t?\n", name));
+                    }
                 }
-            } else if (type.equals("float")) {
-                if (value != null) {
-                    sb.append(String.format("\t%s\tdd\t%s\n", name, value));
-                } else {
-                    sb.append(String.format("\t%s\tdd\t?\n", name));
-                }
-            } else if (type.equals("int")) {
-                if (value != null) {
-                    sb.append(String.format("\t%s\tdd\t%s\n", name, value + ".0"));
-                } else {
-                    sb.append(String.format("\t%s\tdd\t?\n", name));
+                case "int", "DateConverted" -> {
+                    if (value != null) {
+                        sb.append(String.format("\t%s\tdd\t%s\n", name, value + ".0"));
+                    } else {
+                        sb.append(String.format("\t%s\tdd\t?\n", name));
+                    }
                 }
             }
         }
@@ -162,6 +166,7 @@ public class AsmCodeGenerator implements FileGenerator {
 
 
     private String handleArithmetic(String operand1, String operand2) {
+        System.out.println("aritmetica " + operand1 + " " + operand2);
         return loadOperand(operand1) + loadOperand(operand2);
     }
 
@@ -181,8 +186,15 @@ public class AsmCodeGenerator implements FileGenerator {
             // Lógica para operandos como @sum y @mult
             sb.append(String.format("\tFLD\t%s\n", operand));
         } else if (operand.startsWith("_") && operand.length() > 1) {
-            // Este puede pasar cuando hay un numero negativo, ej: [16] = (-, _99999.99, _)
-            sb.append(String.format("\tFLD\t_menosUno\n\tFLD\t%s\n\tFMUL\n", operand, operand));
+            // Verificar si es una constante de fecha que NO debe multiplicarse por -1
+            if (operand.startsWith("_mult_year") || operand.startsWith("_mult_month")) {
+                // Estas son constantes de fecha, cargar directamente
+                sb.append(String.format("\tFLD\t%s\n", operand));
+            } else {
+                System.out.println("operando supuesto negativo " + operand);
+                // Este puede pasar cuando hay un numero negativo, ej: [16] = (-, _99999.99, _)
+                sb.append(String.format("\tFLD\t_menosUno\n\tFLD\t%s\n\tFMUL\n", operand, operand));
+            }
         }
 
         return sb.toString();
@@ -198,28 +210,33 @@ public class AsmCodeGenerator implements FileGenerator {
             // Si el operador no es una variable o constante
             if (symbolTable.get(op) != null) {
                 String type = symbolTable.get(op).getType();
-                if (type.equals("int")) {
+                if (type.equals("int") || type.equals("DateConverted")) {
                     sb.append("\tFLD\t").append(op).append("\n");
+                    System.out.println("operando int o DateConverted");
                 } else if (type.equals("float")) {
                     sb.append("\tFLD\t").append(op).append("\n");
                 } else {
                     sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", op));
                     sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand1));
                     sb.append("\tSTRCPY\n");
+                    System.out.println("LKSADJF:LKJDLF:KJ:DSLKFJ:LKSDFJ");
                     return sb.toString();
                 }
             }
+            sb.append(String.format("\tFSTP %s\n", operand1));
 
-            sb.append(String.format("\tFSTP\t%s\n", operand1));
-        }
-        else if (operand2.startsWith("@") || operand2.equals("_0") || operand2.equals("_1")) { // Los casos @x = @y
-            sb.append(String.format("\tFLD\t%s\n", operand2));
-            sb.append(String.format("\tFSTP\t%s\n", operand1));
-        }
-        else if (operand2.startsWith("_")){ // Asignaciones String tipo a = "perro"
-            sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand2));
-            sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand1));
-            sb.append("\tSTRCPY\n");
+        } else if (operand2.startsWith("@") || operand2.startsWith("_")) { // Los casos @x = @y o @x = _constante
+            // Verificar si es una constante string
+            if (operand2.startsWith("_stringConstant")) { // Asignaciones String tipo a = "perro"
+                sb.append(String.format("\tMOV\tSI,\tOFFSET\t%s\n", operand2));
+                sb.append(String.format("\tMOV\tDI,\tOFFSET\t%s\n", operand1));
+                sb.append("\tSTRCPY\n");
+                System.out.println("EVIVATAAASDA S");
+            } else {
+                // Asignaciones numéricas
+                sb.append(String.format("\tFLD\t%s\n", operand2));
+                sb.append(String.format("\tFSTP\t%s\n", operand1));
+            }
         }
 
 
@@ -227,6 +244,7 @@ public class AsmCodeGenerator implements FileGenerator {
     }
 
     private String handleComparison(String operand1, String operand2) {
+        System.out.println("comparando " + operand1 + " con " + operand2);
         return loadOperand(operand1) +
                 (operand2.equals("_0")? "\tFLDZ\n": loadOperand(operand2)) +
                 "\tFXCH\n\tFCOMP\n\tFSTSW\tAX\n\tSAHF\n\tFFREE\n";
@@ -249,8 +267,8 @@ public class AsmCodeGenerator implements FileGenerator {
 
         switch (type) {
             case "string" -> sb.append(String.format("\tGetString\t%s\n", operand1));
-            case "int" -> sb.append(String.format("\tGetFloat\t%s\n", operand1));
-            case "float" -> sb.append(String.format("\tGetFloat\t%s\n", operand1));
+            case "int", "DateConverted", "float" -> sb.append(String.format("\tGetFloat\t%s\n", operand1));
+
         }
 
         return sb.toString();
@@ -264,8 +282,7 @@ public class AsmCodeGenerator implements FileGenerator {
 
         switch (type) {
             case "string" -> sb.append(String.format("\tDisplayString\t%s\n", operand));
-            case "int" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
-            case "float" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
+            case "int", "float", "DateConverted" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
         }
         sb.append("\tnewline 1\n");
         return sb.toString();
