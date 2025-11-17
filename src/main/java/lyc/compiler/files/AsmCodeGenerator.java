@@ -284,24 +284,10 @@ public class AsmCodeGenerator implements FileGenerator {
         switch (type) {
             case "string" -> sb.append(String.format("\tDisplayString\t%s\n", operand));
             case "DateConverted" -> {
-                // Convertir el número flotante de fecha a string directamente
-                sb.append("\t; Convertir DateConverted a string\n");
+                sb.append("\t; Convertir DateConverted a entero\n");
                 sb.append(String.format("\tfld\t%s\n", operand));
-                sb.append("\tfistp\tdword ptr @dateTemp\t; Convertir a entero\n");
-                sb.append("\tmov\teax, dword ptr @dateTemp\n");
-                sb.append("\tlea\tdi, @dateStr\t; Buffer para el string\n");
-                sb.append("\tmov\tcx, 8\t; 8 dígitos YYYYMMDD\n");
-                sb.append("\tmov\tebx, 10\n");
-                sb.append("\tadd\tdi, 7\t; Empezar desde el final\n");
-                sb.append("@@convertLoop:\n");
-                sb.append("\txor\tedx, edx\n");
-                sb.append("\tdiv\tebx\t; Dividir por 10\n");
-                sb.append("\tadd\tdl, '0'\t; Convertir a ASCII\n");
-                sb.append("\tmov\t[di], dl\n");
-                sb.append("\tdec\tdi\n");
-                sb.append("\tloop\t@@convertLoop\n");
-                sb.append("\tmov\tbyte ptr [di+9], '$'\t; Terminador\n");
-                sb.append("\tDisplayString\t@dateStr\n");
+                sb.append("\tfistp\tdword ptr @dateTemp\n");
+                sb.append("\tDisplayInteger\t@dateTemp\n");
             }
             case "int", "float" -> sb.append(String.format("\tDisplayFloat\t%s\t, 2\n", operand));
         }
