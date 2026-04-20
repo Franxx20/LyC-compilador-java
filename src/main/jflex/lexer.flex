@@ -81,6 +81,11 @@ ReorderFunction = "reorder"
 NegativeCalculationFunction = "negativeCalculation"
 ConvDate = "convDate"
 
+WhileEsp = "WHILE"
+InEsp = "IN"
+DoEsp = "DO"
+EndWhileEsp = "ENDWHILE"
+
 Letter = [a-zA-Z]
 Digit = [0-9]
 
@@ -143,6 +148,11 @@ Comment = "#+"([^#]|#+[^#+])*"+#"
   {ReorderFunction}                         { return symbol(ParserSym.REORDER_FUNCTION); }
   {NegativeCalculationFunction}             { return symbol(ParserSym.NEGATIVE_CALCULATION_FUNCTION); }
   {ConvDate}                                { return symbol(ParserSym.CONV_DATE); }
+
+  {WhileEsp}                                { return symbol(ParserSym.WHILE_ESP); }
+  {InEsp}                                   { return symbol(ParserSym.IN_ESP); }
+  {DoEsp}                                   { return symbol(ParserSym.DO_ESP); }
+  {EndWhileEsp}                             { return symbol(ParserSym.ENDWHILE_ESP); }
 
   /* identifiers */
   {Identifier}                              {

@@ -30,6 +30,9 @@ parser code {:
     private ArrayList<String> reorderList = new ArrayList();
     private int cte_idx, factor_idx, term_idx, exp_idx, exp_idx_aux;
     lyc.compiler.files.AsmCodeGenerator asmGen = new lyc.compiler.files.AsmCodeGenerator();
+    private int inEspLoopCounter = 0;
+    private String inEspVarId    = null;
+    private String inEspLid      = null;
 
     private void clearStacks() {
             exprStack.clear();
@@ -95,6 +98,11 @@ terminal REORDER_FUNCTION;
 terminal NEGATIVE_CALCULATION_FUNCTION;
 terminal CONV_DATE;
 
+terminal WHILE_ESP;
+terminal IN_ESP;
+terminal DO_ESP;
+terminal ENDWHILE_ESP;
+
 terminal String INTEGER_CONSTANT;
 terminal String FLOAT_CONSTANT;
 terminal String STRING_CONSTANT;
@@ -130,6 +138,7 @@ non terminal Integer arguments_list;
 non terminal conv_date_arguments;
 non terminal float_list;
 non terminal float_element;
+non terminal Integer in_esp_list;
 non terminal write_args;
 
 // Start Symbol Definition
@@ -269,7 +278,74 @@ iteration           ::= WHILE OPEN_BRACKET
                             TripleManager.patchTriple(falseIdx, endIdx);
 
                             System.out.println("while (condition) { program }");
-                        :};
+                        :} |
+                        WHILE_ESP IDENTIFIER:id IN_ESP OPEN_SQUARE_BRACKET
+                        {:
+                            inEspLoopCounter++;
+                            inEspLid   = String.valueOf(inEspLoopCounter);
+                            inEspVarId = id;
+                        :}
+                        in_esp_list:elemCount
+                        CLOSE_SQUARE_BRACKET DO_ESP
+                        {:
+                            String lid   = inEspLid;
+                            String varId = inEspVarId;
+
+                            SymbolTableGenerator.SymbolT idSym = SymbolTableGenerator.getSymbol(varId);
+                            if (idSym == null)
+                                throw new UndefinedVariableException("Variable no definida: " + varId);
+
+                            SymbolTableGenerator.insertVariable("@inIdx_" + lid, "int");
+                            SymbolTableGenerator.insertVariable("@inN_"   + lid, "int");
+                            SymbolTableGenerator.insertNonStringConstant("_0", "CTE_INTEGER", "0");
+                            SymbolTableGenerator.insertNonStringConstant("_" + elemCount, "CTE_INTEGER", String.valueOf(elemCount));
+
+                            TripleManager.addTriple("=", "@inIdx_" + lid, "_0");
+                            TripleManager.addTriple("=", "@inN_"   + lid, "_" + elemCount);
+
+                            int etIdx = TripleManager.addTriple("ET", "WHILE_ESP", null);
+                            jumpStack.push(etIdx);
+
+                            TripleManager.addTriple("CMP", "@inIdx_" + lid, "@inN_" + lid);
+                            int exitJumpIdx = TripleManager.addTriple("BGE", "GOTO", null);
+                            jumpStack.push(exitJumpIdx);
+
+                            ArrayList<Integer> biToThenList = new ArrayList<>();
+                            for (int i = 0; i < elemCount; i++) {
+                                SymbolTableGenerator.insertNonStringConstant("_" + i, "CTE_INTEGER", String.valueOf(i));
+                                TripleManager.addTriple("CMP", "@inIdx_" + lid, "_" + i);
+                                int skipIdx = TripleManager.addTriple("BNE", "GOTO", null);
+                                TripleManager.addTriple("=", varId, "@inElem_" + lid + "_" + i);
+                                biToThenList.add(TripleManager.addTriple("BI", "GOTO", null));
+                                int skipLabel = TripleManager.addTriple("ET", "IN_SKIP", null);
+                                TripleManager.patchTriple(skipIdx, skipLabel);
+                            }
+                            int thenIdx = TripleManager.addTriple("ET", "IN_THEN", null);
+                            for (int bi : biToThenList) {
+                                TripleManager.patchTriple(bi, thenIdx);
+                            }
+                        :}
+                        program
+                        ENDWHILE_ESP
+                        {:
+                            String lid = inEspLid;
+
+                            SymbolTableGenerator.insertNonStringConstant("_1", "CTE_INTEGER", "1");
+                            TripleManager.addTriple("+", "@inIdx_" + lid, "_1");
+                            int incIdx = TripleManager.getLastIndex();
+                            TripleManager.addTriple("=", "@inIdx_" + lid, "[" + incIdx + "]");
+
+                            int biBackIdx   = TripleManager.addTriple("BI", "GOTO", null);
+                            int exitJumpIdx = jumpStack.pop();
+                            int etIdx       = jumpStack.pop();
+                            TripleManager.patchTriple(biBackIdx, etIdx);
+
+                            int endIdx = TripleManager.addTriple("ET", "END_WHILE_ESP", null);
+                            TripleManager.patchTriple(exitJumpIdx, endIdx);
+
+                            System.out.println("WHILE_ESP " + inEspVarId + " IN [" + inEspLid + "] DO program ENDWHILE");
+                        :}
+                        ;
 
 var_declaration     ::= INIT OPEN_CURLY_BRACKET list_declaration CLOSE_CURLY_BRACKET
                         {: System.out.println("init { list_declaration }"); :}
@@ -811,6 +887,7 @@ negative_function   ::= NEGATIVE_CALCULATION_FUNCTION OPEN_BRACKET
                         ;
 
 
+
 float_list          ::= float_element:f
                         {:
                             // if (f < 0)
@@ -941,3 +1018,20 @@ float_element       ::= IDENTIFIER:id
                         :}
                         ;
 
+in_esp_list         ::= in_esp_list:count COMMA expression:e
+                        {:
+                            String varName = "@inElem_" + inEspLid + "_" + count;
+                            SymbolTableGenerator.insertVariable(varName, e.getType());
+                            TripleManager.addTriple("=", varName, "[" + exprStack.pop() + "]");
+                            clearStacks();
+                            RESULT = count + 1;
+                        :} |
+                        expression:e
+                        {:
+                            String varName = "@inElem_" + inEspLid + "_0";
+                            SymbolTableGenerator.insertVariable(varName, e.getType());
+                            TripleManager.addTriple("=", varName, "[" + exprStack.pop() + "]");
+                            clearStacks();
+                            RESULT = 1;
+                        :}
+                        ;

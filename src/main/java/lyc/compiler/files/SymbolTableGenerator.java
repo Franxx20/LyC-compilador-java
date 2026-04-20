@@ -120,6 +120,10 @@ public class SymbolTableGenerator implements FileGenerator{
     public static Hashtable<String, SymbolT> getTable() {
         return symbolTable;
     }
+
+    public static void reset() {
+        symbolTable.clear();
+    }
 }
 
 

@@ -2,7 +2,10 @@ package lyc.compiler;
 
 import java_cup.runtime.Symbol;
 import lyc.compiler.factories.ParserFactory;
+import lyc.compiler.files.SymbolTableGenerator;
+import lyc.compiler.files.TripleManager;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +19,12 @@ import static lyc.compiler.Constants.EXAMPLES_ROOT_DIRECTORY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ParserTest {
+
+    @BeforeEach
+    void resetState() {
+        SymbolTableGenerator.reset();
+        TripleManager.reset();
+    }
 
     @Disabled
     @Test
@@ -111,11 +120,16 @@ public class ParserTest {
         compilationSuccessful(readFromFile("while.txt"));
     }
 
+    @Test
+    void cicloEspecialTest() throws Exception {
+        compilationSuccessful(readFromFile("ciclo_especial.txt"));
+    }
+
     private void compilationSuccessful(String input) throws Exception {
         assertThat(scan(input).sym).isEqualTo(ParserSym.EOF);
     }
 
-    private void compilationError(String input){
+    private void compilationError(String input) {
         assertThrows(Exception.class, () -> scan(input));
     }
 

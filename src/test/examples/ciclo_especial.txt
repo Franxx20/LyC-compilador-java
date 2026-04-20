@@ -1,0 +1,25 @@
+init {
+    x : int
+}
+
+#+ Ejemplo 1 +#
+
+WHILE x IN [1,2,3]
+DO
+   write(x)
+ENDWHILE
+
+#+ Ejemplo 2 +#
+WHILE x IN [1+1, 2+2, 3+3]
+DO
+   write(x)
+ENDWHILE
+
+#+ Ejemplo 3 +#
+WHILE x IN [1,2,3,4]
+DO
+    if(x == 2)
+    {
+      write(x)
+    }
+ENDWHILE
